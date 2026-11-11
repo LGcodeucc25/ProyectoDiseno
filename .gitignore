@@ -1,0 +1,31 @@
+# Visual Paradigm
+*.vpp.bak_*
+*.vpp.lck
+.*.vpp.lck
+vp.log
+*.vpp~
+
+# Ofimática
+~$*
+*.tmp
+
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
