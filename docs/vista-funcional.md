@@ -1,6 +1,6 @@
 # Vista funcional
 
-Diagrama de componentes UML. Agrupa las funcionalidades del sistema en componentes con responsabilidades diferenciadas y muestra cómo colaboran entre sí. No describe clases ni despliegue.
+Diagrama de componentes UML. Agrupa las funcionalidades del sistema en componentes con responsabilidades diferenciadas y expresa su colaboración mediante interfaces proporcionadas y requeridas. No describe clases ni despliegue.
 
 ![Diagrama de componentes](diagramas/vista-funcional.png)
 
@@ -11,45 +11,59 @@ La columna **Clases** enlaza esta vista con la [vista lógica](vista-logica.md);
 | Componente | Responsabilidad | Clases | Historias |
 |---|---|---|---|
 | Gestión de Usuarios y Acceso | Administrar las cuentas del equipo y controlar qué puede hacer cada rol | `Persona`, `Usuario` | HU-01, HU-02 |
-| Gestión de Animales | Mantener los datos del animal, su estado, su ubicación y su cuidador responsable | `Animal`, `RegistroEstado` | HU-03, HU-04, HU-05, HU-21 |
 | Gestión de Alojamiento | Administrar los espacios del refugio y su capacidad disponible | `EspacioAlojamiento` | HU-06 |
+| Gestión de Animales | Mantener los datos del animal, su estado, su ubicación y su cuidador responsable | `Animal`, `RegistroEstado` | HU-03, HU-04, HU-05, HU-21 |
 | Atención Médica | Llevar el catálogo de vacunas y el historial sanitario de cada animal | `TipoVacuna`, `Vacunacion`, `Tratamiento` | HU-09, HU-10, HU-11 |
-| Gestión de Adopciones | Conducir el proceso completo, desde el adoptante hasta la entrega o la devolución | `Adoptante`, `SolicitudAdopcion`, `Adopcion` | HU-12 a HU-17, HU-20 |
-| Seguimiento Posadopción | Programar y registrar las visitas posteriores a la entrega | `VisitaSeguimiento` | HU-18, HU-19 |
-| Consulta Integral de Animales | Consolidar y presentar la información completa de un animal | — | HU-07, HU-08 |
+| Gestión de Adopciones | Conducir el proceso completo: adoptante, solicitud, entrega, devolución y visitas de seguimiento | `Adoptante`, `SolicitudAdopcion`, `Adopcion`, `VisitaSeguimiento` | HU-12 a HU-20 |
+| Consultas y Reportes | Consolidar y presentar información que proviene de varios componentes | — | HU-07, HU-08 |
 
-## Interfaz
+## Interfaces públicas
 
-| Interfaz | La proporciona | La requieren | Operaciones |
+Son las que el sistema ofrece al exterior; las consume la capa de presentación. En el diagrama se dibujan como bola sin semicírculo.
+
+| Interfaz | La proporciona | Operaciones principales | Historias |
 |---|---|---|---|
-| `IConsultaEstadoAnimal` | Gestión de Animales | Atención Médica, Gestión de Adopciones | `estadoActual(idAnimal) : EstadoAnimal`, `estaDisponible(idAnimal) : boolean` |
+| `IGestionUsuarios` | Gestión de Usuarios y Acceso | `registrarUsuario` | HU-01 |
+| `IAutenticacion` | Gestión de Usuarios y Acceso | `autenticar`, `cerrarSesion` | HU-02 |
+| `IAdministracionEspacios` | Gestión de Alojamiento | `crearEspacio`, `actualizarCapacidad`, `desactivarEspacio`, `reactivarEspacio`, `consultarOcupacion` | HU-06 |
+| `IRegistroAnimales` | Gestión de Animales | `registrarAnimal`, `actualizarAnimal` | HU-03 |
+| `IEstadoAnimal` | Gestión de Animales | `cambiarEstado` | HU-04 |
+| `IAsignacionesAnimal` | Gestión de Animales | `asignarAlojamiento`, `asignarVoluntario` | HU-05, HU-21 |
+| `ICatalogoVacunas` | Atención Médica | `crearTipoVacuna`, `desactivarTipoVacuna`, `reactivarTipoVacuna` | HU-09 |
+| `IRegistroSanitario` | Atención Médica | `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` | HU-10, HU-11 |
+| `IGestionAdoptantes` | Gestión de Adopciones | `registrarAdoptante`, `actualizarAdoptante` | HU-12 |
+| `IGestionSolicitudes` | Gestión de Adopciones | `registrarSolicitud`, `evaluarSolicitud`, `cancelarSolicitud`, `consultarSolicitudes` | HU-13 a HU-16 |
+| `IGestionAdopciones` | Gestión de Adopciones | `registrarAdopcion`, `registrarDevolucion`, `programarVisita`, `registrarResultadoVisita` | HU-17 a HU-20 |
+| `IBusquedaAnimales` | Consultas y Reportes | `buscar` | HU-07 |
+| `IFichaIntegral` | Consultas y Reportes | `fichaDe` | HU-08 |
 
-Se modeló como interfaz y no como dos dependencias sueltas porque es un mismo contrato consumido por dos clientes distintos: Atención Médica la necesita para no registrar vacunas a un animal *No disponible* y Gestión de Adopciones para no aceptar solicitudes sobre un animal que no esté *Disponible*.
+## Interfaces internas y conexiones de ensamblaje
 
-## Dependencias
+Son los contratos entre componentes. En el diagrama cada una se dibuja con una sola bola en el proveedor y tantos semicírculos como consumidores tenga.
 
-| Cliente | Proveedor | Qué necesita |
-|---|---|---|
-| Seguimiento Posadopción | Gestión de Adopciones | Las visitas se programan sobre una adopción registrada y se cancelan ante una devolución |
-| Gestión de Animales | Gestión de Alojamiento | Consultar el cupo disponible y ocupar o liberar un espacio |
-| Gestión de Animales | Gestión de Usuarios y Acceso | Validar que el voluntario asignado como responsable exista y tenga ese rol |
-| Consulta Integral de Animales | Gestión de Animales | Datos del animal y su estado actual |
-| Consulta Integral de Animales | Atención Médica | Historial de vacunas y tratamientos |
-| Consulta Integral de Animales | Gestión de Adopciones | Solicitudes y adopciones del animal |
-| Consulta Integral de Animales | Seguimiento Posadopción | Visitas de seguimiento y sus resultados |
+| Interfaz | La proporciona | La requieren | Operaciones | Por qué se necesita |
+|---|---|---|---|---|
+| `IConsultaUsuario` | Gestión de Usuarios y Acceso | Gestión de Animales, Atención Médica, Gestión de Adopciones | `existeConRol`, `obtenerNombre` | Validar que el voluntario, el veterinario o el coordinador que queda como responsable exista y tenga ese rol |
+| `IEspacios` | Gestión de Alojamiento | Gestión de Animales | `tieneCupo`, `ocupar`, `liberar` | Comprobar el cupo antes de alojar un animal y liberar el espacio al adoptarse |
+| `IConsultaAnimal` | Gestión de Animales | Atención Médica, Gestión de Adopciones, Consultas y Reportes | `obtenerAnimal`, `estadoActual`, `estaDisponible`, `listar` | Atención Médica no vacuna a un animal *No disponible*; Adopciones no acepta solicitudes sobre uno que no esté *Disponible*; Consultas arma la ficha |
+| `ITransicionEstado` | Gestión de Animales | Gestión de Adopciones | `marcarEnProcesoAdopcion`, `marcarAdoptado`, `marcarEnValoracion` | Los cambios de estado automáticos al aprobar, entregar o recibir una devolución |
+| `IHistorialMedico` | Atención Médica | Consultas y Reportes | `vacunasDe`, `tratamientosDe`, `tieneTratamientoActivo` | La ficha integral muestra el historial sanitario |
+| `IConsultaAdopciones` | Gestión de Adopciones | Consultas y Reportes | `solicitudesDe`, `adopcionDe`, `visitasDe` | La ficha integral muestra solicitudes, adopción y visitas |
 
-Todos los componentes obtienen de Gestión de Usuarios y Acceso la identidad y los permisos del usuario de la sesión. Esa dependencia es transversal y no se dibuja como línea desde cada componente; queda registrada como nota en el diagrama.
+Son seis interfaces internas y diez conexiones de ensamblaje.
 
 ## Decisiones de esta vista
 
-**Consulta Integral de Animales existe para evitar dependencias circulares.** La ficha integral de HU-08 consolida información de cuatro componentes. Si esa responsabilidad viviera dentro de Gestión de Animales, ese componente tendría que depender de Atención Médica, Gestión de Adopciones y Seguimiento Posadopción, mientras que los tres ya dependen de él para consultar el estado del animal. Separar la consulta en un componente que solo consume y nunca es consumido elimina los tres ciclos sin aumentar el número de dependencias.
+**Toda colaboración se expresa como interfaz, no como dependencia.** Una dependencia dice que un componente necesita a otro; una interfaz dice *qué* le pide y con qué firma. Esto último es lo que permite reemplazar la implementación de un componente sin tocar a sus clientes. En el diagrama no hay ninguna flecha discontinua de dependencia.
 
-**La asignación de la ubicación vive en Gestión de Animales, no en Gestión de Alojamiento.** Si Alojamiento asignara el animal a un espacio necesitaría consultar su estado, y Animales necesitaría avisarle para liberar el espacio al adoptarse: dependencia en ambos sentidos. Dejando la asignación en Animales, Alojamiento solo conoce espacios y cupos.
+**Seguimiento Posadopción se fusionó dentro de Gestión de Adopciones.** Tenía una sola clase, dos historias y su única colaboración era con Adopciones. Las visitas de seguimiento son parte del ciclo de vida de la adopción, no una responsabilidad separada.
 
-**Gestión de Alojamiento se mantiene separada pese a tener una sola clase.** Su responsabilidad, administrar espacios y capacidad, es distinta de la del animal. Fusionarla con Gestión de Animales dejaría a ese componente gestionando dos conceptos sin relación directa.
+**Consultas y Reportes se mantiene como componente propio y no dentro de Atención Médica.** La ficha integral consolida cinco cosas: estado del animal, alojamiento, historial médico, solicitudes y visitas. Si viviera dentro de Atención Médica, ese componente tendría que depender de Gestión de Adopciones, lo que mezcla la responsabilidad sanitaria con la del proceso de adopción. Como componente de solo lectura, consume de tres y no es consumido por nadie.
 
-**No existe un componente de interfaz de usuario ni de persistencia.** El alcance de esta vista es la distribución de responsabilidades funcionales; la capa de presentación y el almacenamiento son decisiones de las vistas de desarrollo y despliegue.
+**No hay dependencias circulares.** El grafo es un orden estricto: Gestión de Usuarios y Acceso y Gestión de Alojamiento no requieren nada; Gestión de Animales requiere de esas dos; Atención Médica y Gestión de Adopciones requieren de Gestión de Animales; Consultas y Reportes requiere de los tres anteriores. Eso es lo que se perdería si la ficha integral viviera dentro de Gestión de Animales: ese componente pasaría a requerir de quienes ya lo requieren a él.
+
+**No existe un componente de interfaz de usuario ni de persistencia.** El alcance de esta vista es la distribución de responsabilidades funcionales; la capa de presentación y el almacenamiento corresponden a la vista de desarrollo y a la de despliegue.
 
 ## Notación
 
-Diagrama de componentes UML. Cada componente es un rectángulo con el estereotipo `«component»`. Las dependencias se dibujan con línea discontinua y flecha abierta apuntando al proveedor, y llevan en su nombre lo que el cliente necesita. La interfaz proporcionada se dibuja con el círculo pegado al componente que la ofrece y las requeridas con el semicírculo de cada consumidor. No hay multiplicidades: no corresponden a esta vista.
+Diagrama de componentes UML. Cada componente es un rectángulo con el estereotipo «component» y el icono de componente. Una interfaz proporcionada se dibuja con la bola unida al componente que la ofrece; una requerida, con el semicírculo que la abraza. Cuando una interfaz tiene varios consumidores se dibuja una sola bola y varios semicírculos. No se usan dependencias ni multiplicidades: no corresponden a esta vista.

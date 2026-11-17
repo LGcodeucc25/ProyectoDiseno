@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://schema.omg.org/spec/UML/2.1">
+  <uml:Model xmi:type="uml:Model" xmi:id="modelo_vista_funcional" name="Vista funcional del refugio">
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="prim_String" name="String"/>
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="prim_boolean" name="boolean"/>
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="prim_int" name="int"/>
+    <packagedElement xmi:type="uml:PrimitiveType" xmi:id="prim_void" name="void"/>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IGestionUsuarios" name="IGestionUsuarios">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_1" name="registrarUsuario" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_2" name="identificacion" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_3" name="nombre" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_4" name="correo" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_5" name="rol" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IAutenticacion" name="IAutenticacion">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_6" name="autenticar" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_7" name="correo" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_8" name="clave" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_9" direction="return" type="prim_boolean"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_10" name="cerrarSesion" visibility="public">
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IConsultaUsuario" name="IConsultaUsuario">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_11" name="existeConRol" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_12" name="idUsuario" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_13" name="rol" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_14" direction="return" type="prim_boolean"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_15" name="obtenerNombre" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_16" name="idUsuario" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_17" direction="return" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IAdministracionEspacios" name="IAdministracionEspacios">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_18" name="crearEspacio" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_19" name="nombre" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_20" name="capacidad" direction="in" type="prim_int"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_21" name="actualizarCapacidad" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_22" name="idEspacio" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_23" name="capacidad" direction="in" type="prim_int"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_24" name="desactivarEspacio" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_25" name="idEspacio" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_26" name="reactivarEspacio" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_27" name="idEspacio" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_28" name="consultarOcupacion" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_29" name="idEspacio" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_30" direction="return" type="prim_int"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IEspacios" name="IEspacios">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_31" name="tieneCupo" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_32" name="idEspacio" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_33" direction="return" type="prim_boolean"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_34" name="ocupar" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_35" name="idEspacio" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_36" name="idAnimal" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_37" name="liberar" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_38" name="idEspacio" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_39" name="idAnimal" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IRegistroAnimales" name="IRegistroAnimales">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_40" name="registrarAnimal" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_41" name="datos" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_42" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_43" name="actualizarAnimal" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_44" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_45" name="datos" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IEstadoAnimal" name="IEstadoAnimal">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_46" name="cambiarEstado" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_47" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_48" name="estado" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_49" name="motivo" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IAsignacionesAnimal" name="IAsignacionesAnimal">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_50" name="asignarAlojamiento" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_51" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_52" name="idEspacio" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_53" name="asignarVoluntario" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_54" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_55" name="idUsuario" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IConsultaAnimal" name="IConsultaAnimal">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_56" name="obtenerAnimal" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_57" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_58" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_59" name="estadoActual" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_60" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_61" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_62" name="estaDisponible" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_63" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_64" direction="return" type="prim_boolean"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_65" name="listar" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_66" name="filtros" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_67" direction="return" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_ITransicionEstado" name="ITransicionEstado">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_68" name="marcarEnProcesoAdopcion" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_69" name="idAnimal" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_70" name="marcarAdoptado" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_71" name="idAnimal" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_72" name="marcarEnValoracion" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_73" name="idAnimal" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_ICatalogoVacunas" name="ICatalogoVacunas">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_74" name="crearTipoVacuna" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_75" name="nombre" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_76" name="descripcion" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_77" name="desactivarTipoVacuna" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_78" name="idTipo" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_79" name="reactivarTipoVacuna" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_80" name="idTipo" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IRegistroSanitario" name="IRegistroSanitario">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_81" name="registrarVacunacion" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_82" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_83" name="idTipo" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_84" name="registrarTratamiento" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_85" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_86" name="diagnostico" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_87" name="finalizarTratamiento" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_88" name="idTratamiento" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IHistorialMedico" name="IHistorialMedico">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_89" name="vacunasDe" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_90" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_91" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_92" name="tratamientosDe" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_93" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_94" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_95" name="tieneTratamientoActivo" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_96" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_97" direction="return" type="prim_boolean"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IGestionAdoptantes" name="IGestionAdoptantes">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_98" name="registrarAdoptante" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_99" name="datos" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_100" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_101" name="actualizarAdoptante" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_102" name="idAdoptante" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_103" name="datos" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IGestionSolicitudes" name="IGestionSolicitudes">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_104" name="registrarSolicitud" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_105" name="idAdoptante" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_106" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_107" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_108" name="evaluarSolicitud" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_109" name="idSolicitud" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_110" name="resultado" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_111" name="cancelarSolicitud" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_112" name="idSolicitud" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_113" name="motivo" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_114" name="consultarSolicitudes" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_115" name="filtro" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_116" direction="return" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IGestionAdopciones" name="IGestionAdopciones">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_117" name="registrarAdopcion" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_118" name="idSolicitud" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_119" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_120" name="registrarDevolucion" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_121" name="idAdopcion" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_122" name="motivo" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_123" name="programarVisita" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_124" name="idAdopcion" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_125" name="idVoluntario" direction="in" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_126" name="registrarResultadoVisita" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_127" name="idVisita" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_128" name="calificacion" direction="in" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IConsultaAdopciones" name="IConsultaAdopciones">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_129" name="solicitudesDe" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_130" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_131" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_132" name="adopcionDe" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_133" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_134" direction="return" type="prim_String"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_135" name="visitasDe" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_136" name="idAdopcion" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_137" direction="return" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IBusquedaAnimales" name="IBusquedaAnimales">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_138" name="buscar" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_139" name="filtros" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_140" direction="return" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Interface" xmi:id="ifc_IFichaIntegral" name="IFichaIntegral">
+      <ownedOperation xmi:type="uml:Operation" xmi:id="op_141" name="fichaDe" visibility="public">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_142" name="idAnimal" direction="in" type="prim_String"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="par_143" direction="return" type="prim_String"/>
+      </ownedOperation>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Component" xmi:id="comp_Gestion_de_Usuarios_y_Acceso" name="Gestion de Usuarios y Acceso">
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_144" name="" client="comp_Gestion_de_Usuarios_y_Acceso" supplier="ifc_IGestionUsuarios" contract="ifc_IGestionUsuarios"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_145" name="" client="comp_Gestion_de_Usuarios_y_Acceso" supplier="ifc_IAutenticacion" contract="ifc_IAutenticacion"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_146" name="" client="comp_Gestion_de_Usuarios_y_Acceso" supplier="ifc_IConsultaUsuario" contract="ifc_IConsultaUsuario"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Component" xmi:id="comp_Gestion_de_Alojamiento" name="Gestion de Alojamiento">
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_147" name="" client="comp_Gestion_de_Alojamiento" supplier="ifc_IAdministracionEspacios" contract="ifc_IAdministracionEspacios"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_148" name="" client="comp_Gestion_de_Alojamiento" supplier="ifc_IEspacios" contract="ifc_IEspacios"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Component" xmi:id="comp_Gestion_de_Animales" name="Gestion de Animales">
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_149" name="" client="comp_Gestion_de_Animales" supplier="ifc_IRegistroAnimales" contract="ifc_IRegistroAnimales"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_150" name="" client="comp_Gestion_de_Animales" supplier="ifc_IEstadoAnimal" contract="ifc_IEstadoAnimal"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_151" name="" client="comp_Gestion_de_Animales" supplier="ifc_IAsignacionesAnimal" contract="ifc_IAsignacionesAnimal"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_152" name="" client="comp_Gestion_de_Animales" supplier="ifc_IConsultaAnimal" contract="ifc_IConsultaAnimal"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_153" name="" client="comp_Gestion_de_Animales" supplier="ifc_ITransicionEstado" contract="ifc_ITransicionEstado"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Component" xmi:id="comp_Atencion_Medica" name="Atencion Medica">
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_154" name="" client="comp_Atencion_Medica" supplier="ifc_ICatalogoVacunas" contract="ifc_ICatalogoVacunas"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_155" name="" client="comp_Atencion_Medica" supplier="ifc_IRegistroSanitario" contract="ifc_IRegistroSanitario"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_156" name="" client="comp_Atencion_Medica" supplier="ifc_IHistorialMedico" contract="ifc_IHistorialMedico"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Component" xmi:id="comp_Gestion_de_Adopciones" name="Gestion de Adopciones">
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_157" name="" client="comp_Gestion_de_Adopciones" supplier="ifc_IGestionAdoptantes" contract="ifc_IGestionAdoptantes"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_158" name="" client="comp_Gestion_de_Adopciones" supplier="ifc_IGestionSolicitudes" contract="ifc_IGestionSolicitudes"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_159" name="" client="comp_Gestion_de_Adopciones" supplier="ifc_IGestionAdopciones" contract="ifc_IGestionAdopciones"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_160" name="" client="comp_Gestion_de_Adopciones" supplier="ifc_IConsultaAdopciones" contract="ifc_IConsultaAdopciones"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Component" xmi:id="comp_Consultas_y_Reportes" name="Consultas y Reportes">
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_161" name="" client="comp_Consultas_y_Reportes" supplier="ifc_IBusquedaAnimales" contract="ifc_IBusquedaAnimales"/>
+      <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="real_162" name="" client="comp_Consultas_y_Reportes" supplier="ifc_IFichaIntegral" contract="ifc_IFichaIntegral"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_163" name="requiere IEspacios" client="comp_Gestion_de_Animales" supplier="ifc_IEspacios"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_164" name="requiere IConsultaUsuario" client="comp_Gestion_de_Animales" supplier="ifc_IConsultaUsuario"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_165" name="requiere IConsultaAnimal" client="comp_Atencion_Medica" supplier="ifc_IConsultaAnimal"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_166" name="requiere IConsultaUsuario" client="comp_Atencion_Medica" supplier="ifc_IConsultaUsuario"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_167" name="requiere IConsultaAnimal" client="comp_Gestion_de_Adopciones" supplier="ifc_IConsultaAnimal"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_168" name="requiere ITransicionEstado" client="comp_Gestion_de_Adopciones" supplier="ifc_ITransicionEstado"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_169" name="requiere IConsultaUsuario" client="comp_Gestion_de_Adopciones" supplier="ifc_IConsultaUsuario"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_170" name="requiere IConsultaAnimal" client="comp_Consultas_y_Reportes" supplier="ifc_IConsultaAnimal"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_171" name="requiere IHistorialMedico" client="comp_Consultas_y_Reportes" supplier="ifc_IHistorialMedico"/>
+    <packagedElement xmi:type="uml:Usage" xmi:id="uso_172" name="requiere IConsultaAdopciones" client="comp_Consultas_y_Reportes" supplier="ifc_IConsultaAdopciones"/>
+  </uml:Model>
+</xmi:XMI>
