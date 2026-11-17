@@ -19,23 +19,16 @@ La columna **Clases** enlaza esta vista con la [vista lógica](vista-logica.md);
 
 ## Interfaces públicas
 
-Son las que el sistema ofrece al exterior; las consume la capa de presentación. En el diagrama se dibujan como bola sin semicírculo.
+Cada componente ofrece **una sola** fachada hacia la capa de presentación. En el diagrama se dibujan como bola sin semicírculo.
 
-| Interfaz | La proporciona | Operaciones principales | Historias |
+| Interfaz | La proporciona | Operaciones | Historias |
 |---|---|---|---|
-| `IGestionUsuarios` | Gestión de Usuarios y Acceso | `registrarUsuario` | HU-01 |
-| `IAutenticacion` | Gestión de Usuarios y Acceso | `autenticar`, `cerrarSesion` | HU-02 |
+| `IAccesoUsuarios` | Gestión de Usuarios y Acceso | `registrarUsuario`, `autenticar`, `cerrarSesion` | HU-01, HU-02 |
 | `IAdministracionEspacios` | Gestión de Alojamiento | `crearEspacio`, `actualizarCapacidad`, `desactivarEspacio`, `reactivarEspacio`, `consultarOcupacion` | HU-06 |
-| `IRegistroAnimales` | Gestión de Animales | `registrarAnimal`, `actualizarAnimal` | HU-03 |
-| `IEstadoAnimal` | Gestión de Animales | `cambiarEstado` | HU-04 |
-| `IAsignacionesAnimal` | Gestión de Animales | `asignarAlojamiento`, `asignarVoluntario` | HU-05, HU-21 |
-| `ICatalogoVacunas` | Atención Médica | `crearTipoVacuna`, `desactivarTipoVacuna`, `reactivarTipoVacuna` | HU-09 |
-| `IRegistroSanitario` | Atención Médica | `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` | HU-10, HU-11 |
-| `IGestionAdoptantes` | Gestión de Adopciones | `registrarAdoptante`, `actualizarAdoptante` | HU-12 |
-| `IGestionSolicitudes` | Gestión de Adopciones | `registrarSolicitud`, `evaluarSolicitud`, `cancelarSolicitud`, `consultarSolicitudes` | HU-13 a HU-16 |
-| `IGestionAdopciones` | Gestión de Adopciones | `registrarAdopcion`, `registrarDevolucion`, `programarVisita`, `registrarResultadoVisita` | HU-17 a HU-20 |
-| `IBusquedaAnimales` | Consultas y Reportes | `buscar` | HU-07 |
-| `IFichaIntegral` | Consultas y Reportes | `fichaDe` | HU-08 |
+| `IGestionAnimales` | Gestión de Animales | `registrarAnimal`, `actualizarAnimal`, `cambiarEstado`, `asignarAlojamiento`, `asignarVoluntario` | HU-03, HU-04, HU-05, HU-21 |
+| `IAtencionMedica` | Atención Médica | `crearTipoVacuna`, `desactivarTipoVacuna`, `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` | HU-09, HU-10, HU-11 |
+| `IGestionAdopciones` | Gestión de Adopciones | `registrarAdoptante`, `registrarSolicitud`, `evaluarSolicitud`, `cancelarSolicitud`, `registrarAdopcion`, `registrarDevolucion`, `programarVisita`, `registrarResultadoVisita` | HU-12 a HU-20 |
+| `IConsultas` | Consultas y Reportes | `buscarAnimales`, `fichaDe`, `consultarSolicitudes` | HU-07, HU-08 |
 
 ## Interfaces internas y conexiones de ensamblaje
 
@@ -43,14 +36,14 @@ Son los contratos entre componentes. En el diagrama cada una se dibuja con una s
 
 | Interfaz | La proporciona | La requieren | Operaciones | Por qué se necesita |
 |---|---|---|---|---|
-| `IConsultaUsuario` | Gestión de Usuarios y Acceso | Gestión de Animales, Atención Médica, Gestión de Adopciones | `existeConRol`, `obtenerNombre` | Validar que el voluntario, el veterinario o el coordinador que queda como responsable exista y tenga ese rol |
+| `IConsultaUsuario` | Gestión de Usuarios y Acceso | Gestión de Animales | `existeConRol`, `listarPorRol` | Al asignar el cuidador de un animal hay que ofrecer la lista de voluntarios y verificar que el elegido tenga ese rol |
 | `IEspacios` | Gestión de Alojamiento | Gestión de Animales | `tieneCupo`, `ocupar`, `liberar` | Comprobar el cupo antes de alojar un animal y liberar el espacio al adoptarse |
 | `IConsultaAnimal` | Gestión de Animales | Atención Médica, Gestión de Adopciones, Consultas y Reportes | `obtenerAnimal`, `estadoActual`, `estaDisponible`, `listar` | Atención Médica no vacuna a un animal *No disponible*; Adopciones no acepta solicitudes sobre uno que no esté *Disponible*; Consultas arma la ficha |
 | `ITransicionEstado` | Gestión de Animales | Gestión de Adopciones | `marcarEnProcesoAdopcion`, `marcarAdoptado`, `marcarEnValoracion` | Los cambios de estado automáticos al aprobar, entregar o recibir una devolución |
 | `IHistorialMedico` | Atención Médica | Consultas y Reportes | `vacunasDe`, `tratamientosDe`, `tieneTratamientoActivo` | La ficha integral muestra el historial sanitario |
 | `IConsultaAdopciones` | Gestión de Adopciones | Consultas y Reportes | `solicitudesDe`, `adopcionDe`, `visitasDe` | La ficha integral muestra solicitudes, adopción y visitas |
 
-Son seis interfaces internas y diez conexiones de ensamblaje.
+Son seis interfaces internas y ocho conexiones de ensamblaje. En total, doce interfaces: seis fachadas públicas y seis contratos internos.
 
 ## Decisiones de esta vista
 
@@ -59,6 +52,12 @@ Son seis interfaces internas y diez conexiones de ensamblaje.
 **Seguimiento Posadopción se fusionó dentro de Gestión de Adopciones.** Tenía una sola clase, dos historias y su única colaboración era con Adopciones. Las visitas de seguimiento son parte del ciclo de vida de la adopción, no una responsabilidad separada.
 
 **Consultas y Reportes se mantiene como componente propio y no dentro de Atención Médica.** La ficha integral consolida cinco cosas: estado del animal, alojamiento, historial médico, solicitudes y visitas. Si viviera dentro de Atención Médica, ese componente tendría que depender de Gestión de Adopciones, lo que mezcla la responsabilidad sanitaria con la del proceso de adopción. Como componente de solo lectura, consume de tres y no es consumido por nadie.
+
+**Una sola fachada pública por componente.** La primera versión de esta vista tenía trece interfaces públicas, una por cada grupo de historias. Eso no aportaba información de diseño: era el backlog reescrito en forma de interfaz. El criterio que se aplicó para depurarlas fue segregar por tipo de cliente, no por caso de uso: la capa de presentación es un único cliente de cada componente, así que recibe una fachada; los componentes internos reciben un contrato propio solo cuando lo que necesitan es distinto.
+
+**`IConsultaAnimal` e `ITransicionEstado` están separadas a propósito.** Ambas las proporciona Gestión de Animales, pero tienen clientes con derechos distintos: la primera solo lee y la consumen tres componentes, la segunda modifica el estado y solo la consume Gestión de Adopciones. Si fueran una sola interfaz, Consultas y Reportes, que es de solo lectura, quedaría con la capacidad de cambiar el estado de un animal.
+
+**La identidad del usuario de la sesión no se dibuja.** Atención Médica y Gestión de Adopciones registran quién aplicó una vacuna o quién evaluó una solicitud, pero ese dato viene del contexto de la sesión, no de una consulta a otro componente. Dibujarlo habría sumado dos conexiones que no representan una colaboración real. El único caso en que sí hay consulta es la asignación del voluntario responsable, donde hay que ofrecer la lista de usuarios con ese rol.
 
 **No hay dependencias circulares.** El grafo es un orden estricto: Gestión de Usuarios y Acceso y Gestión de Alojamiento no requieren nada; Gestión de Animales requiere de esas dos; Atención Médica y Gestión de Adopciones requieren de Gestión de Animales; Consultas y Reportes requiere de los tres anteriores. Eso es lo que se perdería si la ficha integral viviera dentro de Gestión de Animales: ese componente pasaría a requerir de quienes ya lo requieren a él.
 
