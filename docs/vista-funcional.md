@@ -45,6 +45,23 @@ Son los contratos entre componentes. En el diagrama cada una se dibuja con una s
 
 Son seis interfaces internas y ocho conexiones de ensamblaje. En total, doce interfaces: seis fachadas públicas y seis contratos internos.
 
+### Nombre de cada conexión
+
+Cada conexión de ensamblaje lleva su nombre sobre la línea, igual que las interfaces. El nombre dice para qué la usa el cliente, no qué hace el proveedor.
+
+| # | Cliente | Interfaz | Nombre de la conexión |
+|---|---|---|---|
+| 1 | Consultas y Reportes | `IHistorialMedico` | obtiene el historial médico |
+| 2 | Consultas y Reportes | `IConsultaAdopciones` | obtiene solicitudes y visitas |
+| 3 | Consultas y Reportes | `IConsultaAnimal` | obtiene los datos del animal |
+| 4 | Atención Médica | `IConsultaAnimal` | verifica el estado antes de vacunar |
+| 5 | Gestión de Adopciones | `IConsultaAnimal` | verifica que el animal esté disponible |
+| 6 | Gestión de Adopciones | `ITransicionEstado` | solicita el cambio de estado automático |
+| 7 | Gestión de Animales | `IEspacios` | verifica cupo y ocupa espacio |
+| 8 | Gestión de Animales | `IConsultaUsuario` | valida el rol del voluntario |
+
+Las conexiones 3, 4 y 5 comparten la misma interfaz, así que comparten una sola bola: las tres líneas llegan a un tronco común y de ahí sale un único semicírculo. Dibujar tres bolas con el mismo nombre significaría que Gestión de Animales realiza tres veces el mismo contrato.
+
 ## Decisiones de esta vista
 
 **Toda colaboración se expresa como interfaz, no como dependencia.** Una dependencia dice que un componente necesita a otro; una interfaz dice *qué* le pide y con qué firma. Esto último es lo que permite reemplazar la implementación de un componente sin tocar a sus clientes. En el diagrama no hay ninguna flecha discontinua de dependencia.
@@ -65,4 +82,4 @@ Son seis interfaces internas y ocho conexiones de ensamblaje. En total, doce int
 
 ## Notación
 
-Diagrama de componentes UML. Cada componente es un rectángulo con el estereotipo «component» y el icono de componente. Una interfaz proporcionada se dibuja con la bola unida al componente que la ofrece; una requerida, con el semicírculo que la abraza. Cuando una interfaz tiene varios consumidores se dibuja una sola bola y varios semicírculos. No se usan dependencias ni multiplicidades: no corresponden a esta vista.
+Diagrama de componentes UML. Cada componente es un rectángulo con el estereotipo «component» y el icono de componente. Una interfaz proporcionada se dibuja con la bola unida al componente que la ofrece; una requerida, con el semicírculo que la abraza por el lado del consumidor. Las conexiones de ensamblaje son líneas sólidas sin punta de flecha: no indican dirección de navegación sino que un componente usa el contrato que otro ofrece. El trazado es ortogonal, con quiebres en ángulo recto y sin líneas superpuestas. No se usan dependencias ni multiplicidades: no corresponden a esta vista.
