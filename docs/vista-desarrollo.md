@@ -99,7 +99,7 @@ Cada operación de la fachada pública se expone como un endpoint. Las transicio
 | `GET` | `/api/espacios/{id}/ocupacion` | `EspacioAlojamientoController.consultarOcupacion` | `IAdministracionEspacios` | Coordinador | HU-06 |
 | `POST` | `/api/animales` | `AnimalController.registrar` | `IGestionAnimales` | Coordinador | HU-03 |
 | `PUT` | `/api/animales/{id}` | `AnimalController.actualizar` | `IGestionAnimales` | Coordinador | HU-03 |
-| `POST` | `/api/animales/{id}/estados` | `AnimalController.cambiarEstado` | `IGestionAnimales` | Coordinador | HU-04 |
+| `POST` | `/api/animales/{id}/estados` | `AnimalController.cambiarEstado` | `IGestionAnimales` | Coordinador, Veterinario | HU-04 |
 | `POST` | `/api/animales/{id}/alojamiento` | `AnimalController.asignarAlojamiento` | `IGestionAnimales` | Coordinador | HU-05 |
 | `POST` | `/api/animales/{id}/responsable` | `AnimalController.asignarVoluntario` | `IGestionAnimales` | Coordinador | HU-21 |
 | `POST` | `/api/tipos-vacuna` | `AtencionMedicaController.crearTipoVacuna` | `IAtencionMedica` | Veterinario | HU-09 |
@@ -114,10 +114,12 @@ Cada operación de la fachada pública se expone como un endpoint. Las transicio
 | `POST` | `/api/solicitudes/{id}/adopcion` | `AdopcionController.registrarAdopcion` | `IGestionAdopciones` | Coordinador | HU-17 |
 | `POST` | `/api/solicitudes/{id}/devolucion` | `AdopcionController.registrarDevolucion` | `IGestionAdopciones` | Coordinador | HU-20 |
 | `POST` | `/api/solicitudes/{id}/visitas` | `AdopcionController.programarVisita` | `IGestionAdopciones` | Coordinador | HU-18 |
-| `POST` | `/api/visitas/{id}/resultado` | `AdopcionController.registrarResultadoVisita` | `IGestionAdopciones` | Voluntario | HU-19 |
+| `POST` | `/api/solicitudes/{id}/visitas/{idVisita}/resultado` | `AdopcionController.registrarResultadoVisita` | `IGestionAdopciones` | Voluntario | HU-19 |
 | `GET` | `/api/animales` | `ConsultaController.buscarAnimales` | `IConsultas` | Todos | HU-07 |
-| `GET` | `/api/animales/{id}/ficha` | `ConsultaController.fichaDe` | `IConsultas` | Coordinador, Veterinario | HU-08 |
+| `GET` | `/api/animales/{id}/ficha` | `ConsultaController.fichaDe` | `IConsultas` | Todos | HU-08 |
 | `GET` | `/api/solicitudes` | `ConsultaController.consultarSolicitudes` | `IConsultas` | Coordinador | HU-16 |
+
+`VisitaSeguimiento` no tiene colección propia: va incrustada en la adopción, que a su vez va dentro de la solicitud. Por eso su ruta cuelga de `/api/solicitudes/{id}` y no existe `/api/visitas/{id}`. La ruta refleja la estructura de almacenamiento.
 
 Códigos de respuesta previstos: `200` para consultas y actualizaciones, `201` para creaciones, `204` para el cierre de sesión, `400` cuando la entrada está mal formada, `404` cuando el recurso no existe, `409` cuando la operación contradice una regla del dominio (adoptar un animal no disponible, alojar en un espacio sin cupo) y `500` para fallos no previstos.
 
@@ -139,5 +141,8 @@ No pertenecen a ninguna de las tres capas; las atraviesan. Se nombran aquí y no
 
 ## 9. Pendientes
 
+- **`ITransicionEstado` no cubre la transición *En proceso de adopción* → *Disponible*.** HU-15 exige que el animal vuelva a *Disponible* cuando el adoptante cancela una solicitud aprobada, pero la interfaz solo ofrece `marcarEnProcesoAdopcion`, `marcarAdoptado` y `marcarEnValoracion`. Falta `marcarDisponible` en la vista funcional, en `AnimalService` y en `Animal`.
+- **El rechazo automático de solicitudes pendientes (HU-04) no tiene a quién pedírselo.** Cuando un animal deja de estar *Disponible*, sus solicitudes pendientes pasan a *Rechazada* en ese mismo momento. Eso obliga a que Gestión de Animales llame a Gestión de Adopciones, que ya la llama a ella. Pendiente decidir entre añadir una interfaz `IBajaSolicitudes` y aceptar el ciclo, u orquestar las dos llamadas desde `AnimalController`.
+- **El voluntario no tiene forma de consultar sus visitas programadas.** El flujo 8 de la vista de contexto lo promete, pero `IConsultas` no tiene la operación y no hay endpoint que la exponga.
 - La paginación de `GET /api/animales` y `GET /api/solicitudes` no está definida. Con el volumen de un refugio pequeño puede esperar, pero debería resolverse antes de implementar.
 - El formato de los filtros de `buscarAnimales` (parámetros de consulta sueltos o un objeto de criterios) está sin decidir.
