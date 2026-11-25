@@ -1,0 +1,1668 @@
+{
+  "info": {
+    "name": "RefugioMascotas",
+    "description": "API del sistema de gestión del refugio. Ejecutar con *Run collection* de arriba abajo: recorre una adopción completa (registrar animal, ponerlo Disponible, adoptante, solicitud, evaluación, entrega, visita y devolución). Requiere la API en {{baseUrl}} con los datos de ejemplo cargados (ana@refugio.org y luis@refugio.org, contraseña Refugio2026). Cada ejecución usa un sufijo único, así que puede repetirse sin limpiar la base.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Fechas locales (no UTC): la API rechaza fechas futuras según el reloj del servidor.",
+          "const local = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };",
+          "pm.collectionVariables.set('hoy', local(Date.now()));",
+          "pm.collectionVariables.set('enUnaSemana', local(Date.now() + 7 * 864e5));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1 · Acceso y animales",
+      "description": "HU-01 a HU-04, HU-07, HU-08 y HU-21.",
+      "item": [
+        {
+          "name": "HU-02 Iniciar sesión (coordinadora)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"ana@refugio.org\",\n  \"contrasena\": \"Refugio2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Sufijo nuevo en cada ejecución: identificaciones, correos y nombres únicos sin limpiar la base.",
+                  "pm.collectionVariables.set('sufijo', String(Date.now()).slice(-8));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "// El token solo se guarda aquí, en el script de test del inicio de sesión.",
+                  "pm.collectionVariables.set('token', pm.response.json().token);",
+                  "pm.test('Rol correcto', () => pm.expect(pm.response.json().rol).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-01 Registrar un voluntario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"V{{sufijo}}\",\n  \"nombre\": \"Jorge León\",\n  \"correo\": \"jorge{{sufijo}}@refugio.org\",\n  \"telefono\": \"3005550101\",\n  \"rol\": \"VOLUNTARIO\",\n  \"contrasena\": \"Voluntario2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idVoluntario', pm.response.json().id);",
+                  "pm.collectionVariables.set('correoVoluntario', pm.response.json().correo);",
+                  "pm.test('No devuelve la contraseña', () => pm.expect(pm.response.json()).to.not.have.property('contrasena'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-03 Registrar animal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bruno\",\n  \"especie\": \"PERRO\",\n  \"raza\": \"Criollo\",\n  \"sexo\": \"DESCONOCIDO\",\n  \"edadAproximada\": \"2 años\",\n  \"fechaIngreso\": \"{{hoy}}\",\n  \"origenIngreso\": \"RESCATE_VIA_PUBLICA\",\n  \"descripcion\": \"Encontrado en el parque\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idAnimal', pm.response.json().id);",
+                  "pm.test('Ingresa En valoración', () => pm.expect(pm.response.json().estadoActual).to.eql('EN_VALORACION'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-03 Actualizar animal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bruno\",\n  \"especie\": \"PERRO\",\n  \"raza\": \"Labrador mestizo\",\n  \"sexo\": \"MACHO\",\n  \"edadAproximada\": \"3 años\",\n  \"fechaIngreso\": \"{{hoy}}\",\n  \"origenIngreso\": \"RESCATE_VIA_PUBLICA\",\n  \"descripcion\": \"Encontrado en el parque\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Raza actualizada', () => pm.expect(pm.response.json().raza).to.eql('Labrador mestizo'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-04 Cambiar estado a Disponible",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/estados",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "estados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"DISPONIBLE\",\n  \"fecha\": \"{{hoy}}\",\n  \"motivo\": \"Valoración médica apta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda Disponible', () => pm.expect(pm.response.json().estadoActual).to.eql('DISPONIBLE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-04 Transición reservada al flujo de adopción (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/estados",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "estados"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_PROCESO_ADOPCION\",\n  \"fecha\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Código de transición reservada', () => pm.expect(pm.response.json().codigo).to.eql('TRANSICION_RESERVADA_AL_FLUJO_DE_ADOPCION'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-21 Asignar voluntario responsable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/responsable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "responsable"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idVoluntario\": \"{{idVoluntario}}\",\n  \"fecha\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Responsable asignado', () => pm.expect(pm.response.json().idVoluntario).to.eql(pm.collectionVariables.get('idVoluntario')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-07 Buscar perros disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?especie=PERRO&estado=DISPONIBLE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "especie",
+                  "value": "PERRO"
+                },
+                {
+                  "key": "estado",
+                  "value": "DISPONIBLE"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye el animal registrado', () => pm.expect(pm.response.json().map(a => a.id)).to.include(pm.collectionVariables.get('idAnimal')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-08 Ficha integral",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/ficha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "ficha"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · Alojamiento",
+      "description": "HU-05 y HU-06.",
+      "item": [
+        {
+          "name": "HU-06 Crear espacio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/espacios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "espacios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Caniles {{sufijo}}\",\n  \"ubicacion\": \"Perros medianos\",\n  \"capacidad\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idEspacio', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-05 Asignar alojamiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/alojamiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "alojamiento"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{idEspacio}}\",\n  \"fecha\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Alojado', () => pm.expect(pm.response.json().idEspacio).to.eql(pm.collectionVariables.get('idEspacio')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-06 Consultar ocupación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/espacios/{{idEspacio}}/ocupacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{idEspacio}}",
+                "ocupacion"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Ocupación 1 de 3', () => { const o = pm.response.json(); pm.expect(o.ocupacion).to.eql(1); pm.expect(o.capacidad).to.eql(3); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-06 Actualizar capacidad",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/espacios/{{idEspacio}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{idEspacio}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacidad\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Capacidad 5', () => pm.expect(pm.response.json().capacidad).to.eql(5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-06 No se desactiva un espacio ocupado (409)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/espacios/{{idEspacio}}/desactivacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{idEspacio}}",
+                "desactivacion"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · Atención médica",
+      "description": "HU-09, HU-10 y HU-11. Se entra como veterinario.",
+      "item": [
+        {
+          "name": "HU-02 Iniciar sesión (veterinario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"luis@refugio.org\",\n  \"contrasena\": \"Refugio2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "// El token solo se guarda aquí, en el script de test del inicio de sesión.",
+                  "pm.collectionVariables.set('token', pm.response.json().token);",
+                  "pm.test('Rol correcto', () => pm.expect(pm.response.json().rol).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-09 Crear tipo de vacuna",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos-vacuna",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tipos-vacuna"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Leptospirosis {{sufijo}}\",\n  \"descripcion\": \"Refuerzo anual\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idTipoVacuna', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-10 Registrar vacunación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/vacunaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "vacunaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idTipoVacuna\": \"{{idTipoVacuna}}\",\n  \"fechaAplicacion\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-11 Registrar tratamiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/tratamientos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "tratamientos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnostico\": \"Otitis\",\n  \"fechaInicio\": \"{{hoy}}\",\n  \"indicaciones\": \"Gotas cada 12 horas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idTratamiento', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-11 Finalizar tratamiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tratamientos/{{idTratamiento}}/finalizacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tratamientos",
+                "{{idTratamiento}}",
+                "finalizacion"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaFin\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene fecha de fin', () => pm.expect(pm.response.json().fechaFin).to.eql(pm.collectionVariables.get('hoy')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-09 Desactivar tipo de vacuna",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos-vacuna/{{idTipoVacuna}}/desactivacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tipos-vacuna",
+                "{{idTipoVacuna}}",
+                "desactivacion"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Inactivo', () => pm.expect(pm.response.json().activo).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 · Adopciones",
+      "description": "HU-12 a HU-17. Se vuelve a entrar como coordinadora. HU-20 (devolución) está al final de la carpeta 5 porque cierra el ciclo después de la visita.",
+      "item": [
+        {
+          "name": "HU-02 Iniciar sesión (coordinadora)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"ana@refugio.org\",\n  \"contrasena\": \"Refugio2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "// El token solo se guarda aquí, en el script de test del inicio de sesión.",
+                  "pm.collectionVariables.set('token', pm.response.json().token);",
+                  "pm.test('Rol correcto', () => pm.expect(pm.response.json().rol).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-12 Registrar adoptante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adoptantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adoptantes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificacion\": \"A{{sufijo}}\",\n  \"nombre\": \"Sofía Castro\",\n  \"correo\": \"sofia@correo.com\",\n  \"telefono\": \"3017778899\",\n  \"direccion\": \"Calle 45 # 12-30\",\n  \"tipoVivienda\": \"CASA\",\n  \"experienciaPrevia\": true,\n  \"notasEntrevista\": \"Tuvo un perro durante 10 años\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idAdoptante', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-13 Registrar solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idAnimal\": \"{{idAnimal}}\",\n  \"idAdoptante\": \"{{idAdoptante}}\",\n  \"fechaSolicitud\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idSolicitud', pm.response.json().id);",
+                  "pm.test('Pendiente', () => pm.expect(pm.response.json().estado).to.eql('PENDIENTE'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-16 Consultar solicitudes del animal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes?animal={{idAnimal}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes"
+              ],
+              "query": [
+                {
+                  "key": "animal",
+                  "value": "{{idAnimal}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Una solicitud', () => pm.expect(pm.response.json().length).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-14 Evaluar solicitud (aprobar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes/{{idSolicitud}}/evaluacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes",
+                "{{idSolicitud}}",
+                "evaluacion"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resultado\": \"APROBADA\",\n  \"fecha\": \"{{hoy}}\",\n  \"observaciones\": \"Hogar adecuado y con patio\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Aprobada', () => pm.expect(pm.response.json().estado).to.eql('APROBADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-08 Ficha: el animal quedó En proceso de adopción",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/ficha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "ficha"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('En proceso de adopción', () => pm.expect(pm.response.json().estadoActual).to.eql('EN_PROCESO_ADOPCION'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-17 Registrar adopción (entrega)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes/{{idSolicitud}}/adopcion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes",
+                "{{idSolicitud}}",
+                "adopcion"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaEntrega\": \"{{hoy}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Tiene adopción', () => pm.expect(pm.response.json().adopcion.fechaEntrega).to.eql(pm.collectionVariables.get('hoy')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-17 El espacio quedó libre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/espacios/{{idEspacio}}/ocupacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{idEspacio}}",
+                "ocupacion"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Ocupación 0', () => pm.expect(pm.response.json().ocupacion).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-08 Ficha: Adoptado y sin espacio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/ficha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "ficha"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Adoptado', () => pm.expect(pm.response.json().estadoActual).to.eql('ADOPTADO'));",
+                  "pm.test('Sin alojamiento', () => pm.expect(pm.response.json().alojamiento).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 · Seguimiento posadopción",
+      "description": "HU-18 y HU-19, y al final HU-20 (devolución), que cancela las visitas que sigan programadas.",
+      "item": [
+        {
+          "name": "HU-18 Programar visita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes/{{idSolicitud}}/visitas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes",
+                "{{idSolicitud}}",
+                "visitas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaPrevista\": \"{{enUnaSemana}}\",\n  \"idVoluntario\": \"{{idVoluntario}}\",\n  \"indicaciones\": \"Revisar adaptación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idVisita', pm.response.json().id);",
+                  "pm.test('Programada', () => pm.expect(pm.response.json().estado).to.eql('PROGRAMADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-18 Programar segunda visita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes/{{idSolicitud}}/visitas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes",
+                "{{idSolicitud}}",
+                "visitas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaPrevista\": \"{{enUnaSemana}}\",\n  \"idVoluntario\": \"{{idVoluntario}}\",\n  \"indicaciones\": \"Control de peso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idVisita2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-02 Iniciar sesión (voluntario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoVoluntario}}\",\n  \"contrasena\": \"Voluntario2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-19 Mis visitas asignadas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/visitas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "visitas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye la visita', () => pm.expect(pm.response.json().map(v => v.visita.id)).to.include(pm.collectionVariables.get('idVisita')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-19 Registrar resultado de la visita",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes/{{idSolicitud}}/visitas/{{idVisita}}/resultado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes",
+                "{{idSolicitud}}",
+                "visitas",
+                "{{idVisita}}",
+                "resultado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaRealizacion\": \"{{hoy}}\",\n  \"calificacion\": \"SATISFACTORIA\",\n  \"observaciones\": \"Animal sano y bien adaptado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Realizada', () => pm.expect(pm.response.json().estado).to.eql('REALIZADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-02 Iniciar sesión (coordinadora)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"ana@refugio.org\",\n  \"contrasena\": \"Refugio2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "// El token solo se guarda aquí, en el script de test del inicio de sesión.",
+                  "pm.collectionVariables.set('token', pm.response.json().token);",
+                  "pm.test('Rol correcto', () => pm.expect(pm.response.json().rol).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-20 Registrar devolución",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/solicitudes/{{idSolicitud}}/devolucion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "solicitudes",
+                "{{idSolicitud}}",
+                "devolucion"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{hoy}}\",\n  \"motivo\": \"Alergia en la familia\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const visitas = pm.response.json().adopcion.visitas;",
+                  "pm.test('La realizada se conserva', () => pm.expect(visitas.find(v => v.id === pm.collectionVariables.get('idVisita')).estado).to.eql('REALIZADA'));",
+                  "pm.test('La programada se canceló', () => pm.expect(visitas.find(v => v.id === pm.collectionVariables.get('idVisita2')).estado).to.eql('CANCELADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-08 Ficha final: En valoración y sin espacio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{idAnimal}}/ficha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{idAnimal}}",
+                "ficha"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('En valoración', () => pm.expect(pm.response.json().estadoActual).to.eql('EN_VALORACION'));",
+                  "pm.test('Adopción conservada con devolución', () => pm.expect(pm.response.json().adopcionActual.motivoDevolucion).to.eql('Alergia en la familia'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-02 Cerrar sesión",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones/actual",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones",
+                "actual"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-02 El token cerrado ya no sirve (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
