@@ -108,15 +108,15 @@ Son los contratos entre componentes. Cada una se dibuja con una sola bola en el 
 
 | Interfaz | La proporciona | La requieren | Operaciones | Por qué se necesita |
 |---|---|---|---|---|
-| `IConsultaUsuario` | Usuarios y Acceso | Gestión de Animales | `existeConRol`, `listarPorRol` | Al asignar el cuidador de un animal hay que ofrecer la lista de voluntarios y verificar que el elegido tenga ese rol |
-| `IEspacios` | Gestión de Alojamiento | Gestión de Animales | `tieneCupo`, `ocupar`, `liberar` | Comprobar el cupo antes de alojar un animal y liberar el espacio al adoptarse |
-| `IConsultaAnimal` | Gestión de Animales | Atención Médica, Gestión de Adopciones, Consultas y Reportes | `obtenerAnimal`, `estadoActual`, `estaDisponible`, `listar` | Atención Médica no vacuna a un animal *No disponible*; Adopciones no acepta solicitudes sobre uno que no esté *Disponible*; Consultas arma la ficha |
+| `IConsultaUsuario` | Usuarios y Acceso | Gestión de Animales, Gestión de Adopciones | `existeConRol`, `listarPorRol` | Al asignar el voluntario responsable de un animal (HU-21) o el voluntario de una visita de seguimiento (HU-18) hay que ofrecer la lista de voluntarios y verificar que el elegido tenga ese rol |
+| `IEspacios` | Gestión de Alojamiento | Gestión de Animales | `tieneCupo`, `ocupacionActual`, `obtenerEspacio` | Comprobar el cupo antes de alojar y resolver el espacio para la ficha |
+| `IConsultaAnimal` | Gestión de Animales | Atención Médica, Gestión de Adopciones, Consultas y Reportes | `obtenerAnimal`, `estadoActual`, `estaDisponible`, `listar`, `ubicacionDe` | Atención Médica no vacuna a un animal *No disponible*; Adopciones no acepta solicitudes sobre uno que no esté *Disponible*; Consultas arma la ficha, con la ubicación ya resuelta por Gestión de Animales |
 | `ITransicionEstado` | Gestión de Animales | Gestión de Adopciones | `marcarEnProcesoAdopcion`, `marcarAdoptado`, `marcarEnValoracion`, `marcarDisponible` | Los cambios de estado automáticos al aprobar, entregar, cancelar o recibir una devolución |
 | `IBajaSolicitudes` | Gestión de Adopciones | Gestión de Animales | `rechazarPendientesDe` | Cuando un animal deja de estar *Disponible* (HU-04), sus solicitudes pendientes se rechazan en ese mismo momento |
 | `IHistorialMedico` | Atención Médica | Consultas y Reportes | `vacunasDe`, `tratamientosDe`, `tieneTratamientoActivo` | La ficha integral muestra el historial sanitario |
 | `IConsultaAdopciones` | Gestión de Adopciones | Consultas y Reportes | `solicitudesDe`, `adopcionDe`, `visitasDe`, `visitasAsignadasA` | La ficha integral muestra solicitudes, adopción y visitas; el voluntario consulta las suyas |
 
-Siete interfaces internas y nueve conexiones de ensamblaje. En total **trece interfaces**: seis fachadas públicas y siete contratos internos.
+Siete interfaces internas y diez conexiones de ensamblaje. En total **trece interfaces**: seis fachadas públicas y siete contratos internos.
 
 | # | Cliente | Interfaz | Nombre de la conexión |
 |---|---|---|---|
@@ -129,8 +129,9 @@ Siete interfaces internas y nueve conexiones de ensamblaje. En total **trece int
 | 7 | Gestión de Animales | `IEspacios` | verifica cupo y ocupa espacio |
 | 8 | Gestión de Animales | `IConsultaUsuario` | valida el rol del voluntario |
 | 9 | Gestión de Animales | `IBajaSolicitudes` | rechaza las solicitudes pendientes |
+| 10 | Gestión de Adopciones | `IConsultaUsuario` | valida el rol del voluntario asignado a la visita |
 
-Las conexiones 3, 4 y 5 comparten la misma interfaz, así que comparten una sola bola: las tres líneas llegan a un tronco común y de ahí sale un único semicírculo. Dibujar tres bolas con el mismo nombre significaría que Gestión de Animales realiza tres veces el mismo contrato.
+Las conexiones 3, 4 y 5 comparten la misma interfaz, así que comparten una sola bola: las tres líneas llegan a un tronco común y de ahí sale un único semicírculo. Dibujar tres bolas con el mismo nombre significaría que Gestión de Animales realiza tres veces el mismo contrato. Lo mismo ocurre con las conexiones 8 y 10 sobre `IConsultaUsuario`.
 
 **Decisiones de esta vista**
 
@@ -139,7 +140,7 @@ Las conexiones 3, 4 y 5 comparten la misma interfaz, así que comparten una sola
 - **`IConsultaAnimal` e `ITransicionEstado` están separadas a propósito.** Ambas las proporciona Gestión de Animales, pero tienen clientes con derechos distintos: la primera solo lee y la consumen tres componentes; la segunda modifica el estado y solo la consume Gestión de Adopciones. Si fueran una sola, Consultas y Reportes, que es de solo lectura, quedaría con la capacidad de cambiar el estado de un animal. Es el mismo criterio que separa `IConsultaAdopciones` de `IBajaSolicitudes`.
 - **Hay un ciclo aceptado entre Gestión de Animales y Gestión de Adopciones**, y es deliberado. HU-04 exige que al dejar un animal de estar *Disponible* sus solicitudes pendientes se rechacen de inmediato; HU-14 exige lo inverso, que al aprobarse una solicitud el animal pase a *En proceso de adopción*. Son dos reglas de negocio simétricas, así que la dependencia es mutua en el dominio, no un defecto del diseño. Se expresa con dos interfaces distintas y estrechas (`ITransicionEstado` e `IBajaSolicitudes`), cada una con un solo consumidor, en lugar de un contrato ancho compartido. La alternativa —orquestar las dos llamadas desde el controller— habría movido una regla de negocio a la capa de presentación.
 - **Seguimiento Posadopción se fusionó dentro de Gestión de Adopciones.** Tenía una sola clase, dos historias y su única colaboración era con Adopciones. Las visitas de seguimiento son parte del ciclo de vida de la adopción, no una responsabilidad separada.
-- **La identidad del usuario de la sesión no se dibuja.** Atención Médica y Gestión de Adopciones registran quién aplicó una vacuna o quién evaluó una solicitud, pero ese dato viene del contexto de la sesión, no de una consulta a otro componente. El único caso en que sí hay consulta es la asignación del voluntario responsable, donde hay que ofrecer la lista de usuarios con ese rol.
+- **La identidad del usuario de la sesión no se dibuja.** Atención Médica y Gestión de Adopciones registran quién aplicó una vacuna o quién evaluó una solicitud, pero ese dato viene del contexto de la sesión, no de una consulta a otro componente. Los únicos dos casos en que sí hay consulta son la asignación del voluntario responsable de un animal (HU-21) y la del voluntario de una visita de seguimiento (HU-18): en ambos hay que ofrecer la lista de usuarios con ese rol y verificar al elegido. Es la misma regla sobre la misma entidad, por eso las dos conexiones llegan a la misma interfaz.
 - **No existe un componente de interfaz de usuario ni de persistencia.** El alcance de esta vista es la distribución de responsabilidades funcionales; la presentación y el almacenamiento corresponden a la vista de desarrollo y a la de despliegue.
 
 ## 3. Vista lógica
@@ -283,23 +284,24 @@ Hay **un Controller y un Service por cada componente**, así que esta vista no i
 
 ### Colaboración entre services
 
-Son las nueve conexiones de ensamblaje de la vista funcional trasladadas a la capa de negocio. Se documentan en tabla y no como líneas en el diagrama, para que las tres capas se sigan leyendo de arriba abajo.
+Son las diez conexiones de ensamblaje de la vista funcional trasladadas a la capa de negocio. Se documentan en tabla y no como líneas en el diagrama, para que las tres capas se sigan leyendo de arriba abajo.
 
 | Service que pide | Service que responde | Interfaz | Para qué |
 |---|---|---|---|
-| `ConsultaService` | `AnimalService` | `IConsultaAnimal` | Obtener el animal y su estado para la ficha integral |
+| `ConsultaService` | `AnimalService` | `IConsultaAnimal` | Obtener el animal, su estado y su ubicación ya resuelta para la ficha integral |
 | `ConsultaService` | `AtencionMedicaService` | `IHistorialMedico` | Añadir vacunas y tratamientos a la ficha |
 | `ConsultaService` | `AdopcionService` | `IConsultaAdopciones` | Añadir solicitudes, adopción y visitas a la ficha |
 | `AtencionMedicaService` | `AnimalService` | `IConsultaAnimal` | Verificar que el animal existe antes de registrar vacuna o tratamiento |
 | `AdopcionService` | `AnimalService` | `IConsultaAnimal` | Verificar que el animal está disponible antes de aceptar la solicitud |
 | `AdopcionService` | `AnimalService` | `ITransicionEstado` | Mover el animal a *en proceso*, *adoptado*, *disponible* o *en valoración* |
-| `AnimalService` | `EspacioAlojamientoService` | `IEspacios` | Comprobar cupo, ocupar y liberar al alojar o adoptar |
+| `AnimalService` | `EspacioAlojamientoService` | `IEspacios` | Comprobar el cupo antes de alojar y resolver el espacio para la ficha |
 | `AnimalService` | `UsuarioService` | `IConsultaUsuario` | Verificar que el usuario asignado tenga el rol de voluntario |
 | `AnimalService` | `AdopcionService` | `IBajaSolicitudes` | Rechazar las solicitudes pendientes de un animal que deja de estar disponible |
+| `AdopcionService` | `UsuarioService` | `IConsultaUsuario` | Verificar que el voluntario asignado a una visita tenga ese rol |
 
 ### `FichaAnimal`: el único objeto que no es entidad
 
-`fichaDe` devuelve información de cuatro componentes a la vez: el animal, su espacio, su historial médico y sus solicitudes. No existe ninguna entidad del dominio que corresponda a eso, y crearla sería inventar una clase sin identidad ni ciclo de vida propios.
+`fichaDe` devuelve información de tres componentes a la vez: el animal con su espacio, su historial médico y sus solicitudes. El espacio no es una cuarta fuente: Gestión de Animales, responsable de la ubicación, lo resuelve internamente con `IEspacios` y lo entrega ya resuelto por `IConsultaAnimal`. No existe ninguna entidad del dominio que corresponda a eso, y crearla sería inventar una clase sin identidad ni ciclo de vida propios.
 
 Por eso `FichaAnimal` es un `«record»` que `ConsultaService` arma pidiendo las partes a los demás services. Esto explica por qué el componente Consultas y Reportes aparece sin clases propias en la vista funcional: su salida es un DTO, no una entidad.
 
@@ -385,6 +387,17 @@ MongoDB no tiene tablas ni claves foráneas: la decisión es **qué vive dentro 
 
 En el segundo caso la composición sigue siendo cierta en el dominio: si se elimina un animal, `AnimalService` elimina sus vacunaciones y tratamientos. La diferencia es que esa regla la hace cumplir el service, no el motor de base de datos.
 
+### Quién cuenta la ocupación
+
+La única fuente de verdad de dónde está un animal es `Animal.idEspacio`. La ocupación de un espacio no se guarda: la cuenta `EspacioAlojamientoRepository.contarAnimalesEn(idEspacio)` sobre la colección `animales`, y la regla de cupo (`activo && ocupación < capacidad`) sigue en el dominio, en `EspacioAlojamiento.tieneCupo(long)`. Alojar a un animal es fijar `Animal.idEspacio`, dato que pertenece a Gestión de Animales; por eso `IEspacios` no tiene `ocupar` ni `liberar`: un método que valida y no guarda nada prometería algo que no cumple. Gestión de Animales pregunta `tieneCupo` y asigna él mismo.
+
+**Alternativas descartadas:**
+
+- *Que `EspacioAlojamiento` guarde la lista de sus animales.* Duplica `Animal.idEspacio` y crea dos fuentes que se pueden desincronizar. Es el error más caro de los tres.
+- *Pedirle el conteo a Gestión de Animales.* Crearía un segundo ciclo, Animales ↔ Alojamiento, que debilitaría el argumento del único ciclo aceptado (Animales ↔ Adopciones).
+
+**Consecuencia asumida:** la capa de datos de Gestión de Alojamiento lee la colección `animales`. Es un acoplamiento de solo lectura, confinado a esa capa, y es el precio de no duplicar el dato.
+
 ---
 
 # Requisitos
@@ -446,27 +459,36 @@ Las 21 historias están publicadas como [issues](../../issues), una por historia
 com.refugio
 ├── presentacion   → UsuarioController, EspacioAlojamientoController, AnimalController,
 │                    AtencionMedicaController, AdopcionController, ConsultaController
-│                    (+ dto/: FichaAnimal)
+│                    (+ dto/: FichaAnimal y los records de petición y respuesta)
 ├── negocio        → UsuarioService, EspacioAlojamientoService, AnimalService,
-│                    AtencionMedicaService, AdopcionService, ConsultaService
+│                    AtencionMedicaService, AdopcionService, ConsultaService,
+│                    y las trece interfaces de la vista funcional (I…)
 ├── datos          → UsuarioRepository, AdoptanteRepository, EspacioAlojamientoRepository,
 │                    AnimalRepository, TipoVacunaRepository, VacunacionRepository,
 │                    TratamientoRepository, SolicitudAdopcionRepository
-└── modelo         → Persona {abstract}, Usuario, Adoptante, Animal, RegistroEstado,
-                     EspacioAlojamiento, TipoVacuna, Vacunacion, Tratamiento,
-                     SolicitudAdopcion, Adopcion, VisitaSeguimiento, IDesactivable,
-                     y las diez enumeraciones
+│                    (+ fragmentos ConteoOcupacion y BusquedaAnimales)
+├── modelo         → Persona {abstract}, Usuario, Adoptante, Animal, RegistroEstado,
+│                    EspacioAlojamiento, TipoVacuna, Vacunacion, Tratamiento,
+│                    SolicitudAdopcion, Adopcion, VisitaSeguimiento, IDesactivable,
+│                    y las diez enumeraciones
+└── config         → SecurityConfig, JwtService, GlobalExceptionHandler, DatosDeEjemplo,
+                     y las excepciones del dominio
 ```
 
-Controller → Service → Repository, con inyección por constructor. Cada controller usa solo su service, y `modelo` no depende de ningún otro paquete del proyecto.
+Controller → Service → Repository, con inyección por constructor. Cada controller depende solo de la fachada de su componente, y cada service depende de los demás por el tipo interfaz, nunca por la clase concreta. `modelo` no depende de ningún otro paquete del proyecto.
+
+El ciclo aceptado entre `AnimalService` y `AdopcionService` se resuelve con `@Lazy` en el parámetro `IBajaSolicitudes` del constructor de `AnimalService`: con inyección por constructor en los dos lados, Spring no podría crear ninguno primero.
 
 ### Clases transversales
 
+Todas en `com.refugio.config`.
+
 | Clase | Qué hace |
 |---|---|
-| `SecurityConfig` | Define qué rol puede llamar a cada ruta, según la columna Rol de la tabla de endpoints |
-| `GlobalExceptionHandler` | Traduce las excepciones del dominio a los códigos `400`, `404` y `409` |
-| `MongoConfig` | Conexión a la base de datos y conversores de los tipos de fecha |
+| `SecurityConfig` | Define qué rol puede llamar a cada ruta, según la columna Rol de la tabla de endpoints, y exige sesión en todas menos el inicio de sesión. Es un interceptor de Spring MVC: el proyecto usa `spring-security-crypto` (BCrypt), no Spring Security completo |
+| `JwtService` | Emite y verifica el token de sesión, y recuerda los tokens cerrados hasta que expiran |
+| `GlobalExceptionHandler` | Traduce las excepciones del dominio a los códigos `400`, `401`, `403`, `404` y `409` |
+| `DatosDeEjemplo` | Carga los datos de demostración al arrancar, solo si la base está vacía |
 
 ### Colecciones de MongoDB
 
@@ -520,7 +542,9 @@ Las transiciones de estado se modelan como una acción sobre un subrecurso (`POS
 
 `VisitaSeguimiento` no tiene colección propia: va incrustada en la adopción, que a su vez va dentro de la solicitud. Por eso su ruta de escritura cuelga de `/api/solicitudes/{id}`. La ruta refleja la estructura de almacenamiento.
 
-Códigos de respuesta: `200` consultas y actualizaciones, `201` creaciones, `204` cierre de sesión, `400` entrada mal formada, `404` recurso inexistente, `409` la operación contradice una regla del dominio (adoptar un animal no disponible, alojar en un espacio sin cupo), `500` fallos no previstos.
+Códigos de respuesta: `200` consultas y actualizaciones, `201` creaciones (incluido el inicio de sesión), `204` cierre de sesión, `400` entrada mal formada, `401` sin sesión válida, `403` rol sin permiso, `404` recurso inexistente, `409` la operación contradice una regla del dominio (adoptar un animal no disponible, alojar en un espacio sin cupo), `500` fallos no previstos.
+
+Filtros: `GET /api/animales?especie=&raza=&sexo=&edad=&estado=&voluntario=` y `GET /api/solicitudes?animal=&adoptante=&estado=`. Todos opcionales y combinados con Y; sin ninguno se devuelve todo. Raza y edad por coincidencia parcial sin distinguir mayúsculas; especie, sexo y estado por el valor exacto de la enumeración. El estado es el **actual** (último `RegistroEstado`), no cualquiera del historial.
 
 ---
 
@@ -529,8 +553,8 @@ Códigos de respuesta: `200` consultas y actualizaciones, `201` creaciones, `204
 | Herramienta | Versión |
 |---|---|
 | Java (JDK) | 21 |
-| Maven | 3.9 o superior |
-| MongoDB | 7 en local, o un clúster de MongoDB Atlas |
+| Maven | no hace falta instalarlo: el repositorio trae el Maven Wrapper (`mvnw`, `mvnw.cmd`), que descarga Maven 3.9.9 |
+| MongoDB | 7 o superior en local, o un clúster de MongoDB Atlas |
 | Postman | para probar los endpoints |
 
 ### Configuración
@@ -552,19 +576,33 @@ $env:MONGODB_URI = "mongodb+srv://<usuario>:<contrasena>@<cluster>.mongodb.net/r
 ### Arrancar
 
 ```powershell
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
 O empaquetado como un solo artefacto (`target/refugio-api.jar`, el de la vista de despliegue):
 
 ```powershell
-mvn clean package
+.\mvnw.cmd clean package
 java -jar target/refugio-api.jar
 ```
 
+En Linux o macOS, `./mvnw` en lugar de `.\mvnw.cmd`.
+
+### Datos de ejemplo
+
+Al arrancar contra una base vacía se cargan 3 usuarios, 4 espacios, 4 tipos de vacuna, 6 animales, 3 adoptantes y 2 solicitudes. Si la base ya tiene datos no se toca nada; para recargarlos, borra la base `refugio` desde Compass.
+
+| Usuario | Rol | Contraseña |
+|---|---|---|
+| `ana@refugio.org` | Coordinador | `Refugio2026` |
+| `luis@refugio.org` | Veterinario | `Refugio2026` |
+| `marta@refugio.org` | Voluntario | `Refugio2026` |
+
+Animales: Toby y Misu *Disponibles* (Toby con una solicitud *Pendiente* de Ana Torres), Luna y Rocky *En valoración*, Nala *Adoptada* por Carlos Ruiz (con una visita programada para Marta) y Rex *No disponible*.
+
 ### Colección de Postman
 
-`RefugioMascotas.postman_collection.json` — *Import* → elegir el archivo → *Run collection* en orden. Se publicará junto con la implementación de los endpoints.
+`RefugioMascotas.postman_collection.json` — *Import* → elegir el archivo → *Run collection* en orden. Una carpeta por hito; recorre una adopción completa, de registrar el animal hasta la devolución. Usa las variables `{{baseUrl}}` y `{{token}}`; el token lo guarda el script de test del inicio de sesión. Cada ejecución usa un sufijo único, así que se puede repetir sin limpiar la base.
 
 ---
 
@@ -572,5 +610,7 @@ java -jar target/refugio-api.jar
 
 - Corregir en la vista lógica la multiplicidad `0..1` de `Usuario — SolicitudAdopcion` («evalúa»), el `1` que falta en el extremo `SolicitudAdopcion` de la composición «origina», y `string` → `String`. Reexportar el PNG después.
 - Definir la paginación de `GET /api/animales` y `GET /api/solicitudes`.
-- Decidir el formato de los filtros de `buscarAnimales`: parámetros de consulta sueltos o un objeto de criterios.
-- Implementar el backend y publicar la colección de Postman.
+- `edadAproximada` es `String` ("2 años"), así que el filtro por edad es coincidencia de texto y no admite rangos. Para rangos reales habría que modelarla como número de meses, lo que cambia la vista lógica.
+- Dibujar en `vista-funcional.vpp` la conexión de Gestión de Adopciones a `IConsultaUsuario` y reexportar el PNG.
+- La vista lógica muestra `ocupar(animal)` y `liberar(animal)` en `EspacioAlojamiento`; el código no las implementa porque la ocupación se deriva de `Animal.idEspacio`. Corregir el diagrama y reexportar.
+- Añadir en la vista funcional las operaciones nuevas: `ocupacionActual` y `obtenerEspacio` en `IEspacios` (sin `ocupar` ni `liberar`), y `ubicacionDe` en `IConsultaAnimal`.
