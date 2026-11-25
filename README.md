@@ -149,7 +149,9 @@ Diagrama de clases. Especifica las clases que implementan las responsabilidades 
 
 Diagrama: [`vista-logica.vpp`](docs/diagramas/vista-logica.vpp) (fuente de Visual Paradigm) · [`vista-logica.png`](docs/diagramas/vista-logica.png) (imagen)
 
-Notación: `-` privado, `+` público. Las clases abstractas van en cursiva. Se omiten los constructores y los métodos `get` y `set`.
+Notación: `-` privado, `+` público. Las clases abstractas van en cursiva. Los métodos de acceso (`get` y `set`) se dibujan porque forman parte del entregable de la asignatura; los constructores se omiten.
+
+Las tablas que siguen listan solo los atributos y las **operaciones propias** de cada clase —las que expresan comportamiento del dominio— y no repiten los métodos de acceso, que son mecánicos y se deducen de los atributos.
 
 ### Personas
 
