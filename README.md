@@ -96,10 +96,10 @@ Cada componente ofrece **una sola** fachada hacia la capa de presentación. En e
 | Interfaz | La proporciona | Operaciones |
 |---|---|---|
 | `IAccesoUsuarios` | Gestión de Usuarios y Acceso | `registrarUsuario`, `autenticar`, `cerrarSesion` |
-| `IAdministracionEspacios` | Gestión de Alojamiento | `crearEspacio`, `actualizarCapacidad`, `desactivarEspacio`, `reactivarEspacio`, `consultarOcupacion` |
+| `IAdministracionEspacios` | Gestión de Alojamiento | `crearEspacio`, `actualizarCapacidad`, `desactivarEspacio`, `reactivarEspacio`, `consultarOcupacion`, `listarEspacios` |
 | `IGestionAnimales` | Gestión de Animales | `registrarAnimal`, `actualizarAnimal`, `cambiarEstado`, `asignarAlojamiento`, `asignarVoluntario` |
-| `IAtencionMedica` | Atención Médica | `crearTipoVacuna`, `desactivarTipoVacuna`, `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` |
-| `IGestionAdopciones` | Gestión de Adopciones | `registrarAdoptante`, `registrarSolicitud`, `evaluarSolicitud`, `cancelarSolicitud`, `registrarAdopcion`, `registrarDevolucion`, `programarVisita`, `registrarResultadoVisita` |
+| `IAtencionMedica` | Atención Médica | `crearTipoVacuna`, `desactivarTipoVacuna`, `reactivarTipoVacuna`, `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` |
+| `IGestionAdopciones` | Gestión de Adopciones | `registrarAdoptante`, `actualizarAdoptante`, `registrarSolicitud`, `evaluarSolicitud`, `cancelarSolicitud`, `registrarAdopcion`, `registrarDevolucion`, `programarVisita`, `reprogramarVisita`, `cancelarVisita`, `registrarResultadoVisita` |
 | `IConsultas` | Consultas y Reportes | `buscarAnimales`, `fichaDe`, `consultarSolicitudes`, `visitasAsignadasA` |
 
 ### Interfaces internas y conexiones de ensamblaje
@@ -303,7 +303,7 @@ Son las diez conexiones de ensamblaje de la vista funcional trasladadas a la cap
 
 `fichaDe` devuelve información de tres componentes a la vez: el animal con su espacio, su historial médico y sus solicitudes. El espacio no es una cuarta fuente: Gestión de Animales, responsable de la ubicación, lo resuelve internamente con `IEspacios` y lo entrega ya resuelto por `IConsultaAnimal`. No existe ninguna entidad del dominio que corresponda a eso, y crearla sería inventar una clase sin identidad ni ciclo de vida propios.
 
-Por eso `FichaAnimal` es un `«record»` que `ConsultaService` arma pidiendo las partes a los demás services. Esto explica por qué el componente Consultas y Reportes aparece sin clases propias en la vista funcional: su salida es un DTO, no una entidad.
+Por eso `FichaAnimal` es un `«record»` que `ConsultaService` arma pidiendo las partes a los demás services. Esto explica por qué el componente Consultas y Reportes aparece sin clases propias en la vista funcional: su salida es un objeto de valor sin identidad, no una entidad. Vive en el paquete `negocio`, junto al service que la construye, como en el marco Negocio del diagrama.
 
 ## 5. Vista de despliegue
 
@@ -459,10 +459,13 @@ Las 21 historias están publicadas como [issues](../../issues), una por historia
 com.refugio
 ├── presentacion   → UsuarioController, EspacioAlojamientoController, AnimalController,
 │                    AtencionMedicaController, AdopcionController, ConsultaController
-│                    (+ dto/: FichaAnimal y los records de petición y respuesta)
+│                    (+ dto/: solo los records que entran y salen por HTTP)
 ├── negocio        → UsuarioService, EspacioAlojamientoService, AnimalService,
 │                    AtencionMedicaService, AdopcionService, ConsultaService,
-│                    y las trece interfaces de la vista funcional (I…)
+│                    las trece interfaces de la vista funcional (I…), FichaAnimal
+│                    y las excepciones del dominio (ExcepcionDelDominio,
+│                    AccesoDenegado, DatoInvalido, NoAutenticado, RecursoNoEncontrado,
+│                    ReglaDeNegocio, TransicionNoPermitida, TransicionReservada)
 ├── datos          → UsuarioRepository, AdoptanteRepository, EspacioAlojamientoRepository,
 │                    AnimalRepository, TipoVacunaRepository, VacunacionRepository,
 │                    TratamientoRepository, SolicitudAdopcionRepository
@@ -471,11 +474,13 @@ com.refugio
 │                    EspacioAlojamiento, TipoVacuna, Vacunacion, Tratamiento,
 │                    SolicitudAdopcion, Adopcion, VisitaSeguimiento, IDesactivable,
 │                    y las diez enumeraciones
-└── config         → SecurityConfig, JwtService, GlobalExceptionHandler, DatosDeEjemplo,
-                     y las excepciones del dominio
+└── config         → SecurityConfig, JwtService, GlobalExceptionHandler, UsuarioAutenticado,
+                     DatosDeEjemplo
 ```
 
-Controller → Service → Repository, con inyección por constructor. Cada controller depende solo de la fachada de su componente, y cada service depende de los demás por el tipo interfaz, nunca por la clase concreta. `modelo` no depende de ningún otro paquete del proyecto.
+Controller → Service → Repository, con inyección por constructor. Cada controller depende solo de la fachada de su componente, y cada service depende de los demás por el tipo interfaz, nunca por la clase concreta. `modelo` no depende de ningún otro paquete del proyecto, y `negocio` no conoce a `presentacion`; de `config` solo usa `JwtService`, para emitir y revocar el token de sesión.
+
+Las excepciones del dominio viven en `negocio` porque son reglas de negocio, no infraestructura; `GlobalExceptionHandler` las traduce a códigos HTTP mirando hacia `negocio`, no al revés.
 
 El ciclo aceptado entre `AnimalService` y `AdopcionService` se resuelve con `@Lazy` en el parámetro `IBajaSolicitudes` del constructor de `AnimalService`: con inyección por constructor en los dos lados, Spring no podría crear ninguno primero.
 
@@ -487,7 +492,8 @@ Todas en `com.refugio.config`.
 |---|---|
 | `SecurityConfig` | Define qué rol puede llamar a cada ruta, según la columna Rol de la tabla de endpoints, y exige sesión en todas menos el inicio de sesión. Es un interceptor de Spring MVC: el proyecto usa `spring-security-crypto` (BCrypt), no Spring Security completo |
 | `JwtService` | Emite y verifica el token de sesión, y recuerda los tokens cerrados hasta que expiran |
-| `GlobalExceptionHandler` | Traduce las excepciones del dominio a los códigos `400`, `401`, `403`, `404` y `409` |
+| `GlobalExceptionHandler` | Traduce las excepciones del dominio (que viven en `negocio`) a los códigos `400`, `401`, `403`, `404` y `409` |
+| `UsuarioAutenticado` | Identidad de quien hace la petición, extraída del token; los controllers pasan su id a los services |
 | `DatosDeEjemplo` | Carga los datos de demostración al arrancar, solo si la base está vacía |
 
 ### Colecciones de MongoDB
@@ -512,6 +518,7 @@ Las transiciones de estado se modelan como una acción sobre un subrecurso (`POS
 | `POST` | `/api/usuarios` | `UsuarioController.registrar` | Coordinador | HU-01 |
 | `POST` | `/api/sesiones` | `UsuarioController.autenticar` | Todos | HU-02 |
 | `DELETE` | `/api/sesiones/actual` | `UsuarioController.cerrarSesion` | Todos | HU-02 |
+| `GET` | `/api/espacios` | `EspacioAlojamientoController.listar` | Todos | HU-06 |
 | `POST` | `/api/espacios` | `EspacioAlojamientoController.crear` | Coordinador | HU-06 |
 | `PATCH` | `/api/espacios/{id}` | `EspacioAlojamientoController.actualizarCapacidad` | Coordinador | HU-06 |
 | `POST` | `/api/espacios/{id}/desactivacion` | `EspacioAlojamientoController.desactivar` | Coordinador | HU-06 |
@@ -524,16 +531,20 @@ Las transiciones de estado se modelan como una acción sobre un subrecurso (`POS
 | `POST` | `/api/animales/{id}/responsable` | `AnimalController.asignarVoluntario` | Coordinador | HU-21 |
 | `POST` | `/api/tipos-vacuna` | `AtencionMedicaController.crearTipoVacuna` | Veterinario | HU-09 |
 | `POST` | `/api/tipos-vacuna/{id}/desactivacion` | `AtencionMedicaController.desactivarTipoVacuna` | Veterinario | HU-09 |
+| `POST` | `/api/tipos-vacuna/{id}/reactivacion` | `AtencionMedicaController.reactivarTipoVacuna` | Veterinario | HU-09 |
 | `POST` | `/api/animales/{id}/vacunaciones` | `AtencionMedicaController.registrarVacunacion` | Veterinario | HU-10 |
 | `POST` | `/api/animales/{id}/tratamientos` | `AtencionMedicaController.registrarTratamiento` | Veterinario | HU-11 |
 | `POST` | `/api/tratamientos/{id}/finalizacion` | `AtencionMedicaController.finalizarTratamiento` | Veterinario | HU-11 |
 | `POST` | `/api/adoptantes` | `AdopcionController.registrarAdoptante` | Coordinador | HU-12 |
+| `PUT` | `/api/adoptantes/{id}` | `AdopcionController.actualizarAdoptante` | Coordinador | HU-12 |
 | `POST` | `/api/solicitudes` | `AdopcionController.registrarSolicitud` | Coordinador | HU-13 |
 | `POST` | `/api/solicitudes/{id}/evaluacion` | `AdopcionController.evaluarSolicitud` | Coordinador | HU-14 |
 | `POST` | `/api/solicitudes/{id}/cancelacion` | `AdopcionController.cancelarSolicitud` | Coordinador | HU-15 |
 | `POST` | `/api/solicitudes/{id}/adopcion` | `AdopcionController.registrarAdopcion` | Coordinador | HU-17 |
 | `POST` | `/api/solicitudes/{id}/devolucion` | `AdopcionController.registrarDevolucion` | Coordinador | HU-20 |
 | `POST` | `/api/solicitudes/{id}/visitas` | `AdopcionController.programarVisita` | Coordinador | HU-18 |
+| `POST` | `/api/solicitudes/{id}/visitas/{idVisita}/reprogramacion` | `AdopcionController.reprogramarVisita` | Coordinador | HU-18 |
+| `POST` | `/api/solicitudes/{id}/visitas/{idVisita}/cancelacion` | `AdopcionController.cancelarVisita` | Coordinador | HU-18 |
 | `POST` | `/api/solicitudes/{id}/visitas/{idVisita}/resultado` | `AdopcionController.registrarResultadoVisita` | Voluntario | HU-19 |
 | `GET` | `/api/animales` | `ConsultaController.buscarAnimales` | Todos | HU-07 |
 | `GET` | `/api/animales/{id}/ficha` | `ConsultaController.fichaDe` | Todos | HU-08 |
@@ -613,4 +624,5 @@ Animales: Toby y Misu *Disponibles* (Toby con una solicitud *Pendiente* de Ana T
 - `edadAproximada` es `String` ("2 años"), así que el filtro por edad es coincidencia de texto y no admite rangos. Para rangos reales habría que modelarla como número de meses, lo que cambia la vista lógica.
 - Dibujar en `vista-funcional.vpp` la conexión de Gestión de Adopciones a `IConsultaUsuario` y reexportar el PNG.
 - La vista lógica muestra `ocupar(animal)` y `liberar(animal)` en `EspacioAlojamiento`; el código no las implementa porque la ocupación se deriva de `Animal.idEspacio`. Corregir el diagrama y reexportar.
-- Añadir en la vista funcional las operaciones nuevas: `ocupacionActual` y `obtenerEspacio` en `IEspacios` (sin `ocupar` ni `liberar`), y `ubicacionDe` en `IConsultaAnimal`.
+- Añadir en la vista funcional las operaciones nuevas: `ocupacionActual` y `obtenerEspacio` en `IEspacios` (sin `ocupar` ni `liberar`), `ubicacionDe` en `IConsultaAnimal`, `listarEspacios` en `IAdministracionEspacios`, `reactivarTipoVacuna` en `IAtencionMedica`, y `actualizarAdoptante`, `reprogramarVisita` y `cancelarVisita` en `IGestionAdopciones`.
+- En la vista de desarrollo, comprobar que `FichaAnimal` y las excepciones del dominio aparecen dentro del marco Negocio, como en el código.
