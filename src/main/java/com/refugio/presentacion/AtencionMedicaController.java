@@ -44,6 +44,11 @@ public class AtencionMedicaController {
         return atencion.desactivarTipoVacuna(id);
     }
 
+    @PostMapping("/tipos-vacuna/{id}/reactivacion")
+    public TipoVacuna reactivarTipoVacuna(@PathVariable String id) {
+        return atencion.reactivarTipoVacuna(id);
+    }
+
     @PostMapping("/animales/{id}/vacunaciones")
     @ResponseStatus(HttpStatus.CREATED)
     public Vacunacion registrarVacunacion(@PathVariable String id,

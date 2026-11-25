@@ -1,4 +1,4 @@
-package com.refugio.presentacion.dto;
+package com.refugio.negocio;
 
 import java.time.LocalDate;
 import java.util.List;

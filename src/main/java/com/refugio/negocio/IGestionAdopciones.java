@@ -16,6 +16,9 @@ public interface IGestionAdopciones {
 
     Adoptante registrarAdoptante(Adoptante datos);
 
+    /** Edita los datos del adoptante; no afecta las evaluaciones ya registradas (HU-12). */
+    Adoptante actualizarAdoptante(String idAdoptante, Adoptante datos);
+
     /** Solo sobre animales Disponibles. Queda Pendiente. */
     SolicitudAdopcion registrarSolicitud(String idAnimal, String idAdoptante, LocalDate fecha);
 
@@ -40,6 +43,16 @@ public interface IGestionAdopciones {
 
     VisitaSeguimiento programarVisita(String idSolicitud, LocalDate fechaPrevista,
                                       String idVoluntario, String indicaciones);
+
+    /**
+     * Cambia la fecha prevista y, si se indica, el voluntario. Solo sobre
+     * visitas programadas; no deja historial de la fecha anterior (HU-18).
+     */
+    VisitaSeguimiento reprogramarVisita(String idSolicitud, String idVisita,
+                                        LocalDate fechaPrevista, String idVoluntario);
+
+    /** Cancelación manual con motivo obligatorio. Solo sobre visitas programadas (HU-18). */
+    VisitaSeguimiento cancelarVisita(String idSolicitud, String idVisita, String motivo);
 
     /** Solo el voluntario asignado puede registrar el resultado (HU-19). */
     VisitaSeguimiento registrarResultadoVisita(String idSolicitud, String idVisita,

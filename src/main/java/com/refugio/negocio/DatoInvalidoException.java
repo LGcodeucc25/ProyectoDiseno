@@ -1,4 +1,4 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /**
  * Un dato de entrada tiene un valor inaceptable aunque el formato sea correcto:

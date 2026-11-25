@@ -1,4 +1,4 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /**
  * El cambio de estado no existe en la tabla de transiciones de

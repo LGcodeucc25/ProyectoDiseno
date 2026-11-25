@@ -1,11 +1,12 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /**
- * Raíz de las excepciones propias del sistema.
+ * Raíz de las excepciones del dominio.
  *
- * <p>Cada subclase corresponde a un código HTTP distinto, y la traducción la
- * hace {@link GlobalExceptionHandler} en un único lugar. Los services lanzan
- * estas excepciones sin saber nada de HTTP: solo dicen qué regla se incumplió.
+ * <p>Son reglas de negocio, no infraestructura: viven aquí, junto a los
+ * services que las lanzan, y no saben nada de HTTP; solo dicen qué regla se
+ * incumplió. La capa de configuración las traduce a códigos de respuesta en un
+ * único lugar, mirando hacia este paquete y no al revés.
  *
  * <p>El {@code codigo} es un identificador estable para quien consuma la API;
  * el mensaje es el texto que se le muestra al usuario.

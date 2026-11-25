@@ -16,11 +16,11 @@ import com.refugio.modelo.EstadoAnimal;
 import com.refugio.modelo.EstadoSolicitud;
 import com.refugio.modelo.Sexo;
 import com.refugio.modelo.SolicitudAdopcion;
+import com.refugio.negocio.FichaAnimal;
 import com.refugio.negocio.IConsultaAdopciones.VisitaAsignada;
 import com.refugio.negocio.IConsultaAnimal.Filtro;
 import com.refugio.negocio.IConsultas;
 import com.refugio.presentacion.dto.AnimalRespuesta;
-import com.refugio.presentacion.dto.FichaAnimal;
 
 /**
  * Consultas y Reportes (HU-07, HU-08, HU-16, HU-19). Depende solo de {@link IConsultas}.

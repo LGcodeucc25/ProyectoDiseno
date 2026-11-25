@@ -1,5 +1,7 @@
 package com.refugio.negocio;
 
+import java.util.List;
+
 import com.refugio.modelo.EspacioAlojamiento;
 
 /**
@@ -19,6 +21,12 @@ public interface IAdministracionEspacios {
     EspacioAlojamiento reactivarEspacio(String idEspacio);
 
     Ocupacion consultarOcupacion(String idEspacio);
+
+    /**
+     * Todos los espacios con su capacidad y ocupación, por nombre (HU-06,
+     * criterio 10). Por defecto solo los activos.
+     */
+    List<Ocupacion> listarEspacios(boolean incluirInactivos);
 
     /** El espacio con su ocupación de este momento. */
     record Ocupacion(EspacioAlojamiento espacio, long ocupados, long libres) {

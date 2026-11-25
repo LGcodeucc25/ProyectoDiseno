@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import com.refugio.modelo.Animal;
 import com.refugio.modelo.EstadoSolicitud;
 import com.refugio.modelo.SolicitudAdopcion;
-import com.refugio.presentacion.dto.FichaAnimal;
 
 /**
  * Consultas y Reportes. Proporciona la fachada {@link IConsultas}.

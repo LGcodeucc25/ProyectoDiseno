@@ -19,6 +19,9 @@ public interface IAtencionMedica {
     /** Nunca se borra: se desactiva y deja de ofrecerse al vacunar (IDesactivable). */
     TipoVacuna desactivarTipoVacuna(String idTipoVacuna);
 
+    /** Vuelve a ofrecerse al vacunar (HU-09). Es la otra mitad del contrato IDesactivable. */
+    TipoVacuna reactivarTipoVacuna(String idTipoVacuna);
+
     Vacunacion registrarVacunacion(String idAnimal, String idTipoVacuna, LocalDate fechaAplicacion,
                                    String idVeterinario);
 

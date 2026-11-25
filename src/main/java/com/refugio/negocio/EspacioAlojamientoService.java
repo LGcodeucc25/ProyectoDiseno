@@ -1,10 +1,10 @@
 package com.refugio.negocio;
 
+import java.util.List;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.refugio.config.DatoInvalidoException;
-import com.refugio.config.RecursoNoEncontradoException;
-import com.refugio.config.ReglaDeNegocioException;
 import com.refugio.datos.EspacioAlojamientoRepository;
 import com.refugio.modelo.EspacioAlojamiento;
 
@@ -72,6 +72,17 @@ public class EspacioAlojamientoService implements IAdministracionEspacios, IEspa
         EspacioAlojamiento espacio = obtenerEspacio(idEspacio);
         long ocupados = espacios.contarAnimalesEn(idEspacio);
         return new Ocupacion(espacio, ocupados, espacio.cuposLibres(ocupados));
+    }
+
+    @Override
+    public List<Ocupacion> listarEspacios(boolean incluirInactivos) {
+        return espacios.findAll(Sort.by("nombre")).stream()
+                .filter(e -> incluirInactivos || e.estaActivo())
+                .map(e -> {
+                    long ocupados = espacios.contarAnimalesEn(e.getId());
+                    return new Ocupacion(e, ocupados, e.cuposLibres(ocupados));
+                })
+                .toList();
     }
 
     // ------------------------------------------------------------ IEspacios

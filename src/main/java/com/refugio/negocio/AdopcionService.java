@@ -10,9 +10,6 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
-import com.refugio.config.AccesoDenegadoException;
-import com.refugio.config.RecursoNoEncontradoException;
-import com.refugio.config.ReglaDeNegocioException;
 import com.refugio.datos.AdoptanteRepository;
 import com.refugio.datos.SolicitudAdopcionRepository;
 import com.refugio.modelo.Adopcion;
@@ -69,6 +66,26 @@ public class AdopcionService implements IGestionAdopciones, IBajaSolicitudes, IC
         datos.setId(null);
         datos.sincronizarIndices();
         return adoptantes.save(datos);
+    }
+
+    @Override
+    public Adoptante actualizarAdoptante(String idAdoptante, Adoptante datos) {
+        Adoptante adoptante = adoptantes.findById(idAdoptante)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Adoptante no encontrado"));
+        boolean cambiaIdentificacion = !adoptante.getIdentificacion().equals(datos.getIdentificacion());
+        if (cambiaIdentificacion && adoptantes.existsByIdentificacionIndex(datos.getIdentificacion())) {
+            throw new ReglaDeNegocioException("Ya existe un adoptante con esa identificación");
+        }
+        adoptante.setIdentificacion(datos.getIdentificacion());
+        adoptante.setNombre(datos.getNombre());
+        adoptante.setCorreo(datos.getCorreo());
+        adoptante.setTelefono(datos.getTelefono());
+        adoptante.setDireccion(datos.getDireccion());
+        adoptante.setTipoVivienda(datos.getTipoVivienda());
+        adoptante.setExperienciaPrevia(datos.isExperienciaPrevia());
+        adoptante.setNotasEntrevista(datos.getNotasEntrevista());
+        adoptante.sincronizarIndices();
+        return adoptantes.save(adoptante);
     }
 
     @Override
@@ -206,6 +223,36 @@ public class AdopcionService implements IGestionAdopciones, IBajaSolicitudes, IC
     }
 
     @Override
+    public VisitaSeguimiento reprogramarVisita(String idSolicitud, String idVisita,
+                                               LocalDate fechaPrevista, String idVoluntario) {
+        SolicitudAdopcion solicitud = obtenerSolicitud(idSolicitud);
+        VisitaSeguimiento visita = exigirProgramada(obtenerVisita(solicitud, idVisita));
+        Validaciones.noAnterior(fechaPrevista, solicitud.getAdopcion().getFechaEntrega(),
+                "fechaPrevista", "La fecha prevista no puede ser anterior a la fecha de entrega");
+        if (idVoluntario != null && !idVoluntario.isBlank()) {
+            // Conexión 10, igual que al programar.
+            if (!usuarios.existeConRol(idVoluntario, Rol.VOLUNTARIO)) {
+                throw new ReglaDeNegocioException(
+                        "El usuario asignado debe existir y tener el rol Voluntario");
+            }
+            visita.setIdVoluntario(idVoluntario);
+        }
+        visita.reprogramar(fechaPrevista);
+        solicitudes.save(solicitud);
+        return visita;
+    }
+
+    @Override
+    public VisitaSeguimiento cancelarVisita(String idSolicitud, String idVisita, String motivo) {
+        Validaciones.obligatorio(motivo, "motivo", "El motivo es obligatorio");
+        SolicitudAdopcion solicitud = obtenerSolicitud(idSolicitud);
+        VisitaSeguimiento visita = exigirProgramada(obtenerVisita(solicitud, idVisita));
+        visita.cancelar(motivo);
+        solicitudes.save(solicitud);
+        return visita;
+    }
+
+    @Override
     public VisitaSeguimiento registrarResultadoVisita(String idSolicitud, String idVisita,
                                                       LocalDate fechaRealizacion,
                                                       Calificacion calificacion,
@@ -216,10 +263,7 @@ public class AdopcionService implements IGestionAdopciones, IBajaSolicitudes, IC
                 "La fecha de realización no puede ser futura");
         SolicitudAdopcion solicitud = obtenerSolicitud(idSolicitud);
         Adopcion adopcion = solicitud.getAdopcion();
-        VisitaSeguimiento visita = adopcion == null ? null : adopcion.buscarVisita(idVisita);
-        if (visita == null) {
-            throw new RecursoNoEncontradoException("Visita de seguimiento no encontrada");
-        }
+        VisitaSeguimiento visita = obtenerVisita(solicitud, idVisita);
         if (!Objects.equals(visita.getIdVoluntario(), idVoluntarioSesion)) {
             throw new AccesoDenegadoException(
                     "Solo el voluntario asignado puede registrar el resultado de esta visita");
@@ -306,6 +350,23 @@ public class AdopcionService implements IGestionAdopciones, IBajaSolicitudes, IC
     private SolicitudAdopcion obtenerSolicitud(String idSolicitud) {
         return solicitudes.findById(idSolicitud)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Solicitud no encontrada"));
+    }
+
+    private static VisitaSeguimiento obtenerVisita(SolicitudAdopcion solicitud, String idVisita) {
+        Adopcion adopcion = solicitud.getAdopcion();
+        VisitaSeguimiento visita = adopcion == null ? null : adopcion.buscarVisita(idVisita);
+        if (visita == null) {
+            throw new RecursoNoEncontradoException("Visita de seguimiento no encontrada");
+        }
+        return visita;
+    }
+
+    /** HU-18, criterio 6: reprogramar y cancelar solo aplican a visitas programadas. */
+    private static VisitaSeguimiento exigirProgramada(VisitaSeguimiento visita) {
+        if (!visita.estaProgramada()) {
+            throw new ReglaDeNegocioException("Solo se pueden modificar visitas programadas");
+        }
+        return visita;
     }
 
     private static Adopcion exigirAdopcion(SolicitudAdopcion solicitud) {

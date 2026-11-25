@@ -3,6 +3,7 @@ package com.refugio.presentacion;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +20,8 @@ import com.refugio.presentacion.dto.AdoptantePeticion;
 import com.refugio.presentacion.dto.AdoptanteRespuesta;
 import com.refugio.presentacion.dto.EvaluacionPeticion;
 import com.refugio.presentacion.dto.FechaMotivoPeticion;
+import com.refugio.presentacion.dto.MotivoPeticion;
+import com.refugio.presentacion.dto.ReprogramacionVisitaPeticion;
 import com.refugio.presentacion.dto.ResultadoVisitaPeticion;
 import com.refugio.presentacion.dto.SolicitudPeticion;
 import com.refugio.presentacion.dto.VisitaPeticion;
@@ -45,6 +48,12 @@ public class AdopcionController {
     @ResponseStatus(HttpStatus.CREATED)
     public AdoptanteRespuesta registrarAdoptante(@Valid @RequestBody AdoptantePeticion p) {
         return AdoptanteRespuesta.de(adopciones.registrarAdoptante(p.aAdoptante()));
+    }
+
+    @PutMapping("/adoptantes/{id}")
+    public AdoptanteRespuesta actualizarAdoptante(@PathVariable String id,
+                                                  @Valid @RequestBody AdoptantePeticion p) {
+        return AdoptanteRespuesta.de(adopciones.actualizarAdoptante(id, p.aAdoptante()));
     }
 
     @PostMapping("/solicitudes")
@@ -84,6 +93,18 @@ public class AdopcionController {
     public VisitaSeguimiento programarVisita(@PathVariable String id,
                                              @Valid @RequestBody VisitaPeticion p) {
         return adopciones.programarVisita(id, p.fechaPrevista(), p.idVoluntario(), p.indicaciones());
+    }
+
+    @PostMapping("/solicitudes/{id}/visitas/{idVisita}/reprogramacion")
+    public VisitaSeguimiento reprogramarVisita(@PathVariable String id, @PathVariable String idVisita,
+                                               @Valid @RequestBody ReprogramacionVisitaPeticion p) {
+        return adopciones.reprogramarVisita(id, idVisita, p.fechaPrevista(), p.idVoluntario());
+    }
+
+    @PostMapping("/solicitudes/{id}/visitas/{idVisita}/cancelacion")
+    public VisitaSeguimiento cancelarVisita(@PathVariable String id, @PathVariable String idVisita,
+                                            @Valid @RequestBody MotivoPeticion p) {
+        return adopciones.cancelarVisita(id, idVisita, p.motivo());
     }
 
     @PostMapping("/solicitudes/{id}/visitas/{idVisita}/resultado")

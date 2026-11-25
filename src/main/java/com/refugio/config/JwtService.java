@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.refugio.modelo.Rol;
 import com.refugio.modelo.Usuario;
+import com.refugio.negocio.NoAutenticadoException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

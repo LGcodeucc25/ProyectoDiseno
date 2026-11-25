@@ -1,4 +1,4 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /**
  * La operación está bien formada pero contradice una regla del dominio:

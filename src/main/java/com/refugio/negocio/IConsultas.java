@@ -5,7 +5,6 @@ import java.util.List;
 import com.refugio.modelo.Animal;
 import com.refugio.modelo.EstadoSolicitud;
 import com.refugio.modelo.SolicitudAdopcion;
-import com.refugio.presentacion.dto.FichaAnimal;
 
 /**
  * Fachada pública de Consultas y Reportes (HU-07, HU-08, HU-16, HU-19).

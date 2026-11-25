@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.refugio.config.RecursoNoEncontradoException;
-import com.refugio.config.ReglaDeNegocioException;
 import com.refugio.datos.TipoVacunaRepository;
 import com.refugio.datos.TratamientoRepository;
 import com.refugio.datos.VacunacionRepository;
@@ -54,6 +52,13 @@ public class AtencionMedicaService implements IAtencionMedica, IHistorialMedico 
     public TipoVacuna desactivarTipoVacuna(String idTipoVacuna) {
         TipoVacuna tipo = obtenerTipo(idTipoVacuna);
         tipo.desactivar();
+        return tipos.save(tipo);
+    }
+
+    @Override
+    public TipoVacuna reactivarTipoVacuna(String idTipoVacuna) {
+        TipoVacuna tipo = obtenerTipo(idTipoVacuna);
+        tipo.reactivar();
         return tipos.save(tipo);
     }
 

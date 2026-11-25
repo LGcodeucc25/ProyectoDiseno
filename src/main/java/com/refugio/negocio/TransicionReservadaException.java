@@ -1,4 +1,4 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /**
  * El cambio de estado existe, pero solo lo puede disparar el proceso de

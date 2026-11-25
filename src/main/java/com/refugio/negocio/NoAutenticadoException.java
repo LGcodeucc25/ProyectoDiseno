@@ -1,4 +1,4 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /** No hay sesión válida: falta el token, expiró, fue revocado o las credenciales no coinciden. 401. */
 public class NoAutenticadoException extends ExcepcionDelDominio {

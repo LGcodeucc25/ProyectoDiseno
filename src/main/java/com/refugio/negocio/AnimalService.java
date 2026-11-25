@@ -8,10 +8,6 @@ import java.util.Set;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import com.refugio.config.RecursoNoEncontradoException;
-import com.refugio.config.ReglaDeNegocioException;
-import com.refugio.config.TransicionNoPermitidaException;
-import com.refugio.config.TransicionReservadaException;
 import com.refugio.datos.AnimalRepository;
 import com.refugio.modelo.Animal;
 import com.refugio.modelo.EspacioAlojamiento;

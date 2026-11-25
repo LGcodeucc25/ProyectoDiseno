@@ -2,8 +2,6 @@ package com.refugio.negocio;
 
 import java.time.LocalDate;
 
-import com.refugio.config.DatoInvalidoException;
-
 /**
  * Reglas de valor que se repiten en varios casos de uso: fechas que no pueden
  * ser futuras ni anteriores a otra, y textos obligatorios. El formato de la

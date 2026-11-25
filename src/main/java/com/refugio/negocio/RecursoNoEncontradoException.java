@@ -1,4 +1,4 @@
-package com.refugio.config;
+package com.refugio.negocio;
 
 /** El recurso pedido no existe. Se responde con 404. */
 public class RecursoNoEncontradoException extends ExcepcionDelDominio {

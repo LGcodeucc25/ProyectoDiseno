@@ -18,6 +18,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.refugio.negocio.AccesoDenegadoException;
+import com.refugio.negocio.DatoInvalidoException;
+import com.refugio.negocio.NoAutenticadoException;
+import com.refugio.negocio.RecursoNoEncontradoException;
+import com.refugio.negocio.ReglaDeNegocioException;
+
 /**
  * Traduce las excepciones a códigos HTTP en un solo lugar:
  * 400 entrada mal formada, 401 sin sesión, 403 sin permiso, 404 no existe,

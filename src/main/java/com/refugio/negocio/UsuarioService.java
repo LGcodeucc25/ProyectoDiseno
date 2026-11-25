@@ -7,8 +7,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.refugio.config.JwtService;
-import com.refugio.config.NoAutenticadoException;
-import com.refugio.config.ReglaDeNegocioException;
 import com.refugio.datos.UsuarioRepository;
 import com.refugio.modelo.Rol;
 import com.refugio.modelo.Usuario;

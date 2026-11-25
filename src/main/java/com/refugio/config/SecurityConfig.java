@@ -19,6 +19,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.refugio.modelo.Rol;
+import com.refugio.negocio.AccesoDenegadoException;
+import com.refugio.negocio.NoAutenticadoException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -52,6 +54,7 @@ public class SecurityConfig implements WebMvcConfigurer {
             new Regla("POST", "/api/usuarios", SOLO_COORDINADOR),
             new Regla("DELETE", "/api/sesiones/actual", TODOS),
 
+            new Regla("GET", "/api/espacios", TODOS),
             new Regla("POST", "/api/espacios", SOLO_COORDINADOR),
             new Regla("PATCH", "/api/espacios/{id}", SOLO_COORDINADOR),
             new Regla("POST", "/api/espacios/{id}/desactivacion", SOLO_COORDINADOR),
@@ -66,17 +69,21 @@ public class SecurityConfig implements WebMvcConfigurer {
 
             new Regla("POST", "/api/tipos-vacuna", SOLO_VETERINARIO),
             new Regla("POST", "/api/tipos-vacuna/{id}/desactivacion", SOLO_VETERINARIO),
+            new Regla("POST", "/api/tipos-vacuna/{id}/reactivacion", SOLO_VETERINARIO),
             new Regla("POST", "/api/animales/{id}/vacunaciones", SOLO_VETERINARIO),
             new Regla("POST", "/api/animales/{id}/tratamientos", SOLO_VETERINARIO),
             new Regla("POST", "/api/tratamientos/{id}/finalizacion", SOLO_VETERINARIO),
 
             new Regla("POST", "/api/adoptantes", SOLO_COORDINADOR),
+            new Regla("PUT", "/api/adoptantes/{id}", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes/{id}/evaluacion", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes/{id}/cancelacion", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes/{id}/adopcion", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes/{id}/devolucion", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes/{id}/visitas", SOLO_COORDINADOR),
+            new Regla("POST", "/api/solicitudes/{id}/visitas/{idVisita}/reprogramacion", SOLO_COORDINADOR),
+            new Regla("POST", "/api/solicitudes/{id}/visitas/{idVisita}/cancelacion", SOLO_COORDINADOR),
             new Regla("POST", "/api/solicitudes/{id}/visitas/{idVisita}/resultado", SOLO_VOLUNTARIO),
 
             new Regla("GET", "/api/animales", TODOS),
