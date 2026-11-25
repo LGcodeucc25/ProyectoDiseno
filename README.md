@@ -5,7 +5,7 @@ Proyecto final de Diseño de Software. Backend REST en **Java 21 + Spring Boot 3
 | | |
 |---|---|
 | Diagramas | [`docs/diagramas/`](docs/diagramas) — un `.vpp` de Visual Paradigm y su `.png` por vista |
-| Mockups | [`docs/mockups/`](docs/mockups) — una pantalla por historia de usuario |
+| Mockups | [`docs/mockups/`](docs/mockups) — 21 pantallas, una por historia de usuario |
 | Backlog | [Issues](../../issues) — 21 historias con validación INVEST y criterios en Gherkin |
 | Código | [`src/main/java/com/refugio/`](src/main/java/com/refugio) |
 
@@ -45,7 +45,7 @@ En producción el HTTPS lo pone el servidor donde se publica la API; en local co
 
 Delimita la frontera del sistema: quién intercambia información con él y qué información es. El sistema se representa como un único proceso, sin detallar su interior.
 
-![Diagrama de contexto](docs/diagramas/vista-contexto.png)
+Diagrama: [`vista-contexto.vpp`](docs/diagramas/vista-contexto.vpp) (fuente de Visual Paradigm) · [`vista-contexto.png`](docs/diagramas/vista-contexto.png) (imagen)
 
 **Proceso 0:** Sistema de Gestión del Refugio.
 
@@ -78,7 +78,7 @@ Los flujos del nivel 0 son agregados por definición: se desglosan al descompone
 
 Agrupa las funcionalidades en componentes con responsabilidades diferenciadas y expresa su colaboración mediante interfaces proporcionadas y requeridas. No describe clases ni despliegue.
 
-![Diagrama de componentes](docs/diagramas/vista-funcional.png)
+Diagrama: [`vista-funcional.vpp`](docs/diagramas/vista-funcional.vpp) (fuente de Visual Paradigm) · [`vista-funcional.png`](docs/diagramas/vista-funcional.png) (imagen)
 
 | Componente | Responsabilidad | Clases | Historias |
 |---|---|---|---|
@@ -146,7 +146,7 @@ Las conexiones 3, 4 y 5 comparten la misma interfaz, así que comparten una sola
 
 Diagrama de clases. Especifica las clases que implementan las responsabilidades de la vista funcional, con sus atributos, operaciones y relaciones.
 
-![Diagrama de clases](docs/diagramas/vista-logica.png)
+Diagrama: [`vista-logica.vpp`](docs/diagramas/vista-logica.vpp) (fuente de Visual Paradigm) · [`vista-logica.png`](docs/diagramas/vista-logica.png) (imagen)
 
 Notación: `-` privado, `+` público. Las clases abstractas van en cursiva. Se omiten los constructores y los métodos `get` y `set`.
 
@@ -247,7 +247,7 @@ La implementan `EspacioAlojamiento` y `TipoVacuna`. Las dos entidades siguen la 
 
 Diagrama de clases organizado por capas. Muestra cómo se estructura el código: qué clase recibe la petición, cuál aplica las reglas y cuál habla con la base de datos.
 
-![Diagrama de clases por capas](docs/diagramas/vista-desarrollo.png)
+Diagrama: [`vista-desarrollo.vpp`](docs/diagramas/vista-desarrollo.vpp) (fuente de Visual Paradigm) · [`vista-desarrollo.png`](docs/diagramas/vista-desarrollo.png) (imagen)
 
 | Capa | Marco en el diagrama | Responsabilidad | Sufijo |
 |---|---|---|---|
@@ -307,7 +307,7 @@ Por eso `FichaAnimal` es un `«record»` que `ConsultaService` arma pidiendo las
 
 Dónde se ejecuta cada pieza y cómo se comunican los nodos.
 
-![Diagrama de despliegue](docs/diagramas/vista-despliegue.png)
+Diagrama: [`vista-despliegue.vpp`](docs/diagramas/vista-despliegue.vpp) (fuente de Visual Paradigm) · [`vista-despliegue.png`](docs/diagramas/vista-despliegue.png) (imagen)
 
 | Nodo «device» | Entorno de ejecución | Artefacto desplegado |
 |---|---|---|
@@ -571,7 +571,7 @@ java -jar target/refugio-api.jar
 # Pendientes
 
 - Corregir en la vista lógica la multiplicidad `0..1` de `Usuario — SolicitudAdopcion` («evalúa»), el `1` que falta en el extremo `SolicitudAdopcion` de la composición «origina», y `string` → `String`. Reexportar el PNG después.
-- Publicar los 21 mockups en `docs/mockups/` y enlazarlos desde cada issue.
+- Enlazar cada mockup de `docs/mockups/` desde su issue.
 - Definir la paginación de `GET /api/animales` y `GET /api/solicitudes`.
 - Decidir el formato de los filtros de `buscarAnimales`: parámetros de consulta sueltos o un objeto de criterios.
 - Implementar el backend y publicar la colección de Postman.
