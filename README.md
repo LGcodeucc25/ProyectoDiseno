@@ -436,7 +436,7 @@ La columna **Historia** enlaza con la issue que implementa cada requisito. Ning�
 
 ### Backlog
 
-Las 21 historias están publicadas como [issues](../../issues), una por historia, con validación INVEST, criterios de aceptación en Gherkin y su mockup. Están etiquetadas por componente y agrupadas en cinco hitos según el orden de implementación.
+Las 21 historias están publicadas como [issues](../../issues), una por historia. Cada una lleva su validación INVEST, los criterios de aceptación en Gherkin, los supuestos y decisiones, y el mockup de la pantalla. Están etiquetadas por componente y agrupadas en cinco hitos según el orden de implementación.
 
 ---
 
@@ -571,7 +571,6 @@ java -jar target/refugio-api.jar
 # Pendientes
 
 - Corregir en la vista lógica la multiplicidad `0..1` de `Usuario — SolicitudAdopcion` («evalúa»), el `1` que falta en el extremo `SolicitudAdopcion` de la composición «origina», y `string` → `String`. Reexportar el PNG después.
-- Enlazar cada mockup de `docs/mockups/` desde su issue.
 - Definir la paginación de `GET /api/animales` y `GET /api/solicitudes`.
 - Decidir el formato de los filtros de `buscarAnimales`: parámetros de consulta sueltos o un objeto de criterios.
 - Implementar el backend y publicar la colección de Postman.
