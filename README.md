@@ -9,7 +9,7 @@ Proyecto final de Diseño de Software. Backend REST en **Java 21 + Spring Boot 3
 | Backlog | [Issues](../../issues) — 21 historias con validación INVEST y criterios en Gherkin |
 | Código | [`src/main/java/com/refugio/`](src/main/java/com/refugio) |
 
-**Índice** · [El problema](#el-problema) · [Alcance](#alcance) · [Vistas de arquitectura](#vistas-de-arquitectura) · [Decisiones de diseño](#decisiones-de-diseño) · [Requisitos](#requisitos) · [El backend](#el-backend) · [Cómo correrlo](#cómo-correrlo) · [Pendientes](#pendientes)
+**Índice** · [El problema](#el-problema) · [Alcance](#alcance) · [Vistas de arquitectura](#vistas-de-arquitectura) · [Decisiones de diseño](#decisiones-de-diseño) · [Requisitos](#requisitos) · [El backend](#el-backend) · [Cómo correrlo](#cómo-correrlo)
 
 ---
 
@@ -98,7 +98,7 @@ Cada componente ofrece **una sola** fachada hacia la capa de presentación. En e
 | `IAccesoUsuarios` | Gestión de Usuarios y Acceso | `registrarUsuario`, `autenticar`, `cerrarSesion` |
 | `IAdministracionEspacios` | Gestión de Alojamiento | `crearEspacio`, `actualizarCapacidad`, `desactivarEspacio`, `reactivarEspacio`, `consultarOcupacion`, `listarEspacios` |
 | `IGestionAnimales` | Gestión de Animales | `registrarAnimal`, `actualizarAnimal`, `cambiarEstado`, `asignarAlojamiento`, `asignarVoluntario` |
-| `IAtencionMedica` | Atención Médica | `crearTipoVacuna`, `desactivarTipoVacuna`, `reactivarTipoVacuna`, `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` |
+| `IAtencionMedica` | Atención Médica | `crearTipoVacuna`, `actualizarTipoVacuna`, `desactivarTipoVacuna`, `reactivarTipoVacuna`, `registrarVacunacion`, `registrarTratamiento`, `finalizarTratamiento` |
 | `IGestionAdopciones` | Gestión de Adopciones | `registrarAdoptante`, `actualizarAdoptante`, `registrarSolicitud`, `evaluarSolicitud`, `cancelarSolicitud`, `registrarAdopcion`, `registrarDevolucion`, `programarVisita`, `reprogramarVisita`, `cancelarVisita`, `registrarResultadoVisita` |
 | `IConsultas` | Consultas y Reportes | `buscarAnimales`, `fichaDe`, `consultarSolicitudes`, `visitasAsignadasA` |
 
@@ -398,6 +398,12 @@ La única fuente de verdad de dónde está un animal es `Animal.idEspacio`. La o
 
 **Consecuencia asumida:** la capa de datos de Gestión de Alojamiento lee la colección `animales`. Es un acoplamiento de solo lectura, confinado a esa capa, y es el precio de no duplicar el dato.
 
+### Las consultas no se paginan
+
+**Alternativa descartada:** paginar `GET /api/animales` y `GET /api/solicitudes` con parámetros de página y tamaño.
+
+Con el volumen de RNF003 (50 animales activos y 200 registros históricos) una respuesta completa es pequeña y se entrega dentro del tiempo exigido, así que la paginación no aporta nada. Sí tendría un coste: cada respuesta pasaría a ir envuelta en un objeto con el total y la página, y la colección de Postman tendría que recorrer páginas para comprobar un resultado. Si el volumen creciera mucho por encima de RNF004, se añadiría sin cambiar los filtros.
+
 ---
 
 # Requisitos
@@ -530,6 +536,7 @@ Las transiciones de estado se modelan como una acción sobre un subrecurso (`POS
 | `POST` | `/api/animales/{id}/alojamiento` | `AnimalController.asignarAlojamiento` | Coordinador | HU-05 |
 | `POST` | `/api/animales/{id}/responsable` | `AnimalController.asignarVoluntario` | Coordinador | HU-21 |
 | `POST` | `/api/tipos-vacuna` | `AtencionMedicaController.crearTipoVacuna` | Veterinario | HU-09 |
+| `PUT` | `/api/tipos-vacuna/{id}` | `AtencionMedicaController.actualizarTipoVacuna` | Veterinario | HU-09 |
 | `POST` | `/api/tipos-vacuna/{id}/desactivacion` | `AtencionMedicaController.desactivarTipoVacuna` | Veterinario | HU-09 |
 | `POST` | `/api/tipos-vacuna/{id}/reactivacion` | `AtencionMedicaController.reactivarTipoVacuna` | Veterinario | HU-09 |
 | `POST` | `/api/animales/{id}/vacunaciones` | `AtencionMedicaController.registrarVacunacion` | Veterinario | HU-10 |
@@ -556,6 +563,8 @@ Las transiciones de estado se modelan como una acción sobre un subrecurso (`POS
 Códigos de respuesta: `200` consultas y actualizaciones, `201` creaciones (incluido el inicio de sesión), `204` cierre de sesión, `400` entrada mal formada, `401` sin sesión válida, `403` rol sin permiso, `404` recurso inexistente, `409` la operación contradice una regla del dominio (adoptar un animal no disponible, alojar en un espacio sin cupo), `500` fallos no previstos.
 
 Filtros: `GET /api/animales?especie=&raza=&sexo=&edad=&estado=&voluntario=` y `GET /api/solicitudes?animal=&adoptante=&estado=`. Todos opcionales y combinados con Y; sin ninguno se devuelve todo. Raza y edad por coincidencia parcial sin distinguir mayúsculas; especie, sexo y estado por el valor exacto de la enumeración. El estado es el **actual** (último `RegistroEstado`), no cualquiera del historial.
+
+*Limitación conocida del modelo:* `edadAproximada` es un `String` ("2 años"), así que el filtro por edad es una coincidencia de texto y no admite rangos. Para filtrar por rango habría que modelarla como un número de meses, lo que cambiaría la vista lógica.
 
 ---
 
@@ -614,15 +623,3 @@ Animales: Toby y Misu *Disponibles* (Toby con una solicitud *Pendiente* de Ana T
 ### Colección de Postman
 
 `RefugioMascotas.postman_collection.json` — *Import* → elegir el archivo → *Run collection* en orden. Una carpeta por hito; recorre una adopción completa, de registrar el animal hasta la devolución. Usa las variables `{{baseUrl}}` y `{{token}}`; el token lo guarda el script de test del inicio de sesión. Cada ejecución usa un sufijo único, así que se puede repetir sin limpiar la base.
-
----
-
-# Pendientes
-
-- Corregir en la vista lógica la multiplicidad `0..1` de `Usuario — SolicitudAdopcion` («evalúa»), el `1` que falta en el extremo `SolicitudAdopcion` de la composición «origina», y `string` → `String`. Reexportar el PNG después.
-- Definir la paginación de `GET /api/animales` y `GET /api/solicitudes`.
-- `edadAproximada` es `String` ("2 años"), así que el filtro por edad es coincidencia de texto y no admite rangos. Para rangos reales habría que modelarla como número de meses, lo que cambia la vista lógica.
-- Dibujar en `vista-funcional.vpp` la conexión de Gestión de Adopciones a `IConsultaUsuario` y reexportar el PNG.
-- La vista lógica muestra `ocupar(animal)` y `liberar(animal)` en `EspacioAlojamiento`; el código no las implementa porque la ocupación se deriva de `Animal.idEspacio`. Corregir el diagrama y reexportar.
-- Añadir en la vista funcional las operaciones nuevas: `ocupacionActual` y `obtenerEspacio` en `IEspacios` (sin `ocupar` ni `liberar`), `ubicacionDe` en `IConsultaAnimal`, `listarEspacios` en `IAdministracionEspacios`, `reactivarTipoVacuna` en `IAtencionMedica`, y `actualizarAdoptante`, `reprogramarVisita` y `cancelarVisita` en `IGestionAdopciones`.
-- En la vista de desarrollo, comprobar que `FichaAnimal` y las excepciones del dominio aparecen dentro del marco Negocio, como en el código.

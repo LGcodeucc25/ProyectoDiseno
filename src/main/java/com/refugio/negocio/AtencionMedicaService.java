@@ -49,6 +49,17 @@ public class AtencionMedicaService implements IAtencionMedica, IHistorialMedico 
     }
 
     @Override
+    public TipoVacuna actualizarTipoVacuna(String idTipoVacuna, String nombre, String descripcion) {
+        TipoVacuna tipo = obtenerTipo(idTipoVacuna);
+        if (tipos.existsByNombreIgnoreCaseAndIdNot(nombre.trim(), idTipoVacuna)) {
+            throw new ReglaDeNegocioException("Ya existe un tipo de vacuna con ese nombre");
+        }
+        tipo.setNombre(nombre.trim());
+        tipo.setDescripcion(descripcion);
+        return tipos.save(tipo);
+    }
+
+    @Override
     public TipoVacuna desactivarTipoVacuna(String idTipoVacuna) {
         TipoVacuna tipo = obtenerTipo(idTipoVacuna);
         tipo.desactivar();

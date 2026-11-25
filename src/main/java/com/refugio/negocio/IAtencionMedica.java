@@ -16,6 +16,13 @@ public interface IAtencionMedica {
 
     TipoVacuna crearTipoVacuna(String nombre, String descripcion);
 
+    /**
+     * Edita nombre y descripción (HU-09). El nombre sigue siendo único sin
+     * distinguir mayúsculas. Las aplicaciones ya registradas muestran el nombre
+     * nuevo porque apuntan al mismo tipo.
+     */
+    TipoVacuna actualizarTipoVacuna(String idTipoVacuna, String nombre, String descripcion);
+
     /** Nunca se borra: se desactiva y deja de ofrecerse al vacunar (IDesactivable). */
     TipoVacuna desactivarTipoVacuna(String idTipoVacuna);
 

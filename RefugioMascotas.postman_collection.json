@@ -765,6 +765,94 @@
           ]
         },
         {
+          "name": "HU-09 Editar tipo de vacuna",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos-vacuna/{{idTipoVacuna}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tipos-vacuna",
+                "{{idTipoVacuna}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Leptospirosis canina {{sufijo}}\",\n  \"descripcion\": \"Refuerzo anual, dos dosis iniciales\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Nombre actualizado', () => pm.expect(pm.response.json().nombre).to.eql('Leptospirosis canina ' + pm.collectionVariables.get('sufijo')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HU-09 No se renombra con un nombre existente (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos-vacuna/{{idTipoVacuna}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tipos-vacuna",
+                "{{idTipoVacuna}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"rabia\",\n  \"descripcion\": \"Choca con 'Rabia' de los datos de ejemplo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Mensaje de HU-09', () => pm.expect(pm.response.json().mensaje).to.eql('Ya existe un tipo de vacuna con ese nombre'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "HU-10 Registrar vacunación",
           "request": {
             "method": "POST",

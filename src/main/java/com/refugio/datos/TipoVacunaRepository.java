@@ -8,4 +8,7 @@ import com.refugio.modelo.TipoVacuna;
 public interface TipoVacunaRepository extends MongoRepository<TipoVacuna, String> {
 
     boolean existsByNombreIgnoreCase(String nombre);
+
+    /** Al renombrar: ¿otro tipo, distinto de este, ya usa ese nombre? */
+    boolean existsByNombreIgnoreCaseAndIdNot(String nombre, String id);
 }

@@ -68,6 +68,7 @@ public class SecurityConfig implements WebMvcConfigurer {
             new Regla("POST", "/api/animales/{id}/responsable", SOLO_COORDINADOR),
 
             new Regla("POST", "/api/tipos-vacuna", SOLO_VETERINARIO),
+            new Regla("PUT", "/api/tipos-vacuna/{id}", SOLO_VETERINARIO),
             new Regla("POST", "/api/tipos-vacuna/{id}/desactivacion", SOLO_VETERINARIO),
             new Regla("POST", "/api/tipos-vacuna/{id}/reactivacion", SOLO_VETERINARIO),
             new Regla("POST", "/api/animales/{id}/vacunaciones", SOLO_VETERINARIO),

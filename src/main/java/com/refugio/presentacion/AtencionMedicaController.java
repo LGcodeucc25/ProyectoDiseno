@@ -3,6 +3,7 @@ package com.refugio.presentacion;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +38,12 @@ public class AtencionMedicaController {
     @ResponseStatus(HttpStatus.CREATED)
     public TipoVacuna crearTipoVacuna(@Valid @RequestBody TipoVacunaPeticion p) {
         return atencion.crearTipoVacuna(p.nombre(), p.descripcion());
+    }
+
+    @PutMapping("/tipos-vacuna/{id}")
+    public TipoVacuna actualizarTipoVacuna(@PathVariable String id,
+                                           @Valid @RequestBody TipoVacunaPeticion p) {
+        return atencion.actualizarTipoVacuna(id, p.nombre(), p.descripcion());
     }
 
     @PostMapping("/tipos-vacuna/{id}/desactivacion")
